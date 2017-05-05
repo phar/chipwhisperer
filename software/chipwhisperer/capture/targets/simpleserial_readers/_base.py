@@ -47,6 +47,12 @@ class SimpleSerialTemplate(Parameterized, Plugin):
     def close(self):
         pass
 
+    def init(self):
+        pass
+
+    def reinit(self):
+        pass
+
     def con(self, scope=None):
         """Connect to target"""
         self.connectStatus.setValue(True)
@@ -61,3 +67,6 @@ class SimpleSerialTemplate(Parameterized, Plugin):
 
     def read(self, num=0, timeout=250):
         return None
+
+    def inWaiting(self):
+        pass

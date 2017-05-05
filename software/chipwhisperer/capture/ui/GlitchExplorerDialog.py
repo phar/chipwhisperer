@@ -375,7 +375,8 @@ class GlitchExplorerDialog(Parameterized, QtFixes.QDialog):
 
         starttime = datetime.now()
 
-        respstr = str(bytearray(resp.encode('utf-8')))
+        respstr = str([resp]) #ghettocode
+		#respstr = str(bytearray(resp.encode('utf-8')))
         # respstr = ' '.join(["%02x" % t for t in bytearray(resp)])
 
         settingsList = []

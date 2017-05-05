@@ -40,7 +40,6 @@ class SimpleSerial(TargetTemplate):
 
         ser_cons = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.targets.simpleserial_readers", True, False)
         self.ser = ser_cons[SimpleSerial_ChipWhispererLite._name]
-
         self.keylength = 16
         self.textlength = 16
         self.outputlength = 16
@@ -63,6 +62,9 @@ class SimpleSerial(TargetTemplate):
         ])
 
         self.setConnection(self.ser, blockSignal=True)
+	
+    def reinit(self):
+        self.ser.reinit()
 
     @setupSetParam("Key Length")
     def setKeyLen(self, klen):
@@ -103,7 +105,7 @@ class SimpleSerial(TargetTemplate):
 
     def _con(self, scope = None):
         if not scope or not hasattr(scope, "qtadc"): Warning("You need a scope with OpenADC connected to use this Target")
-
+        self.ser.init()
         self.ser.con(scope)
         # 'x' flushes everything & sets system back to idle
         self.ser.write("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
@@ -114,6 +116,7 @@ class SimpleSerial(TargetTemplate):
             self.ser.close()
 
     def init(self):
+        self.ser.init()
         self.runCommand(self.findParam('cmdinit').getValue())
 
     def setModeEncrypt(self):
@@ -213,7 +216,8 @@ class SimpleSerial(TargetTemplate):
         if len(expected[0]) > 0:
             if response[0:len(expected[0])] != expected[0]:
                 print("Sync Error: %s"%response)
-                print("Hex Version: %s" % (" ".join(["%02x" % ord(t) for t in response])))
+                #print("Hex Version: %s" % (" ".join(["%02x" % ord(t) for t in response])))
+                print("Data: %s" % str([response]) )
                 return None
 
         startindx = len(expected[0])

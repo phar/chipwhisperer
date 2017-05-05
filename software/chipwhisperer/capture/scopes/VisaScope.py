@@ -26,7 +26,7 @@
 #=================================================
 
 from .base import ScopeTemplate
-from chipwhisperer.capture.scopes.visascope_interface.mso54831D import VisaScopeInterface_MSO54831D
+from chipwhisperer.capture.scopes.visascope_interface.general_visa import VisaScopeInterface_GeneralVisa
 from chipwhisperer.common.utils import pluginmanager
 from chipwhisperer.common.utils.parameter import setupSetParam
 from chipwhisperer.common.utils.pluginmanager import Plugin
@@ -41,13 +41,13 @@ class VisaScopeInterface(ScopeTemplate, Plugin):
         scopes = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.scopes.visascope_interface", True, False)
 
         self.params.addChildren([
-            {'name':'Scope Type', 'key':'type', 'type':'list', 'values':scopes, 'value':scopes[VisaScopeInterface_MSO54831D._name], 'set':self.setCurrentScope, 'childmode':'parent'},
+            {'name':'Scope Type', 'key':'type', 'type':'list', 'values':scopes, 'value':scopes[VisaScopeInterface_GeneralVisa._name], 'set':self.setCurrentScope, 'childmode':'parent'},
             {'name':'Connect String', 'key':'connStr', 'type':'str', 'value':''},
             {'name':'Example Strings', 'type':'list', 'values':['', 'TCPIP0::192.168.2.100::inst0::INSTR'], 'value':'', 'set':self.exampleString},
         ])
         self.params.init()
         self.scopetype = None
-        self.setCurrentScope(self.findParam('type').getValue(type))
+		
 
     @setupSetParam("Example Strings")
     def exampleString(self, newstr):
@@ -60,6 +60,7 @@ class VisaScopeInterface(ScopeTemplate, Plugin):
             self.scopetype.dataUpdated.connect(self.newDataReceived)
 
     def _con(self):
+        self.setCurrentScope(self.findParam('type').getValue(type))
         if self.scopetype is not None:
             self.scopetype.con(self.findParam('connStr').getValue())
             return True

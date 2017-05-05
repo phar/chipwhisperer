@@ -25,6 +25,7 @@
 
 from PySide.QtGui import *
 import chipwhisperer.common.utils.qt_tweaks as QtFixes
+import binascii
 
 
 class EncryptionStatusMonitor(QtFixes.QDialog):
@@ -90,9 +91,7 @@ class EncryptionStatusMonitor(QtFixes.QDialog):
 
     def setHexText(self, lineedit, data):
         if data is not None:
-            text = ""
-            for t in data: text += "%02X " % t
-            lineedit.setText(text)
+            lineedit.setText(binascii.hexlify(data))
         else:
             lineedit.setText("?")
 

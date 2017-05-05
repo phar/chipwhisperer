@@ -59,6 +59,8 @@ class CWCoreAPI(Parameterized):
         self.sigAttackChanged = util.Signal()
         self.sigNewInputData = util.Signal()
         self.sigNewTextResponse = util.Signal()
+        self.sigNewCapture = util.Signal()
+        self.sigPreArm = util.Signal()
         self.sigTraceDone = util.Signal()
         self.sigCampaignStart = util.Signal()
         self.sigCampaignDone = util.Signal()
@@ -306,7 +308,9 @@ class CWCoreAPI(Parameterized):
     def capture1(self):
         """Capture one trace"""
         try:
+            self.sigNewCapture.emit()
             ac = AcquisitionController(self.getScope(), self.getTarget(), writer=None, auxList=self._auxList, keyTextPattern=self.getAcqPattern())
+            ac.sigPreArm.connect(self.sigPreArm.emit)
             ac.sigNewTextResponse.connect(self.sigNewTextResponse.emit)
             if self.getTarget():
                 self.getTarget().init()
@@ -348,7 +352,9 @@ class CWCoreAPI(Parameterized):
                     if aux:
                         aux.setPrefix(prefix)
 
+                self.sigNewCapture.emit()
                 ac = AcquisitionController(self.getScope(), self.getTarget(), currentTrace, self._auxList, self.getAcqPattern())
+                ac.sigPreArm.connect(self.sigPreArm.emit)
                 ac.setMaxtraces(setSize)
                 ac.sigNewTextResponse.connect(self.sigNewTextResponse.emit)
                 ac.sigTraceDone.connect(self.sigTraceDone.emit)

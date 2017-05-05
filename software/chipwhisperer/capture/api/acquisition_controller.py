@@ -32,7 +32,7 @@ class AcquisitionController:
     def __init__(self, scope, target=None, writer=None, auxList=None, keyTextPattern=None):
         self.sigTraceDone = util.Signal()
         self.sigNewTextResponse = util.Signal()
-
+        self.sigPreArm = util.Signal()
         self.currentTrace = 0
         self.maxtraces = 1
 
@@ -84,12 +84,14 @@ class AcquisitionController:
         if self.auxList:
             for aux in self.auxList:
                 if aux:
+                    self.sigPreArm.emit()
                     aux.traceArm()
 
         if self.target:
             self.target.reinit()
 
         if self.scope:
+            self.sigPreArm.emit()
             self.scope.arm()
 
         if self.auxList:
@@ -141,6 +143,7 @@ class AcquisitionController:
         if self.auxList:
             for aux in self.auxList:
                 if aux:
+                    self.sigPreArm.emit()
                     aux.traceArm()
 
         if self.target:
