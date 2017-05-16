@@ -38,7 +38,7 @@ from chipwhisperer.common.scripts.base import UserScriptBase
 
 
 class UserScript(UserScriptBase):
-    _name = "Timing Attack on CW-Lite (XMEGA)"
+    _name = "Timing Attack on CW-Lite (XMEGA) - deprecated"
     _description = "SimpleSerial Timing Attack on CW-Lite (XMEGA)"
 
     def __init__(self, api):

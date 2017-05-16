@@ -32,7 +32,7 @@ class SimpleSerial(TargetTemplate):
 
 
 	def getbuff2(self):
-		return self.buff2
+		return self.buff2.encode('string_escape')
 	
 	def setbuff2(self,buff2, blockSignal=True):
 		self.buff2 = buff2.decode('string_escape')

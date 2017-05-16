@@ -66,6 +66,7 @@ class CWCoreAPI(Parameterized):
         self.sigCampaignDone = util.Signal()
         self.executingScripts = util.Observable(False)
 
+        self.valid_glitchers = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.scopes", True, True) #fixme
         self.valid_scopes = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.scopes", True, True)
         self.valid_targets =  pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.targets", True, True)
         self.valid_traces = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.common.traces", True, True)
@@ -77,7 +78,7 @@ class CWCoreAPI(Parameterized):
         self.settings = Settings()
 
         # Initialize default values
-        self._project = self._scope = self._target = self._attack =  self._traceFormat = self._acqPattern = None
+        self._project = self._scope = self._target = self._attack =  self._traceFormat = self._acqPattern = self._glitcher = None
         self._attack = self.valid_attacks.get("CPA", None)
         self._acqPattern = self.valid_acqPatterns["Basic"]
         self._auxList = [None]  # TODO: implement it as a list in the whole class
@@ -87,7 +88,8 @@ class CWCoreAPI(Parameterized):
         self.params = Parameter(name='Generic Settings', type='group', addLoadSave=True).register()
         self.params.addChildren([
             {'name':'Scope Module', 'key':'scopeMod', 'type':'list', 'values':self.valid_scopes, 'get':self.getScope, 'set':self.setScope},
-            {'name':'Target Module', 'key':'targetMod', 'type':'list', 'values':self.valid_targets, 'get':self.getTarget, 'set':self.setTarget},
+			{'name':'Glitcher Module', 'key':'glitchMod', 'type':'list', 'values':self.valid_glitchers, 'get':self.getGlitcher, 'set':self.setGlitcher},
+			{'name':'Target Module', 'key':'targetMod', 'type':'list', 'values':self.valid_targets, 'get':self.getTarget, 'set':self.setTarget},
             {'name':'Trace Format', 'type':'list', 'values':self.valid_traces, 'get':self.getTraceFormat, 'set':self.setTraceFormat},
             {'name':'Auxiliary Module', 'type':'list', 'values':self.valid_aux, 'get':self.getAuxModule, 'set':self.setAux},
             {'name':'Acquisition Settings', 'type':'group', 'children':[
@@ -99,6 +101,11 @@ class CWCoreAPI(Parameterized):
                     {'name':'Key/Text Pattern', 'type':'list', 'values':self.valid_acqPatterns, 'get':self.getAcqPattern, 'set':self.setAcqPattern},
             ]},
         ])
+
+
+        self.glitchParam = Parameter(name="Glitcher Settings", type='group', addLoadSave=True).register()
+        self.params.getChild('Glitcher Module').stealDynamicParameters(self.glitchParam)
+
         self.scopeParam = Parameter(name="Scope Settings", type='group', addLoadSave=True).register()
         self.params.getChild('Scope Module').stealDynamicParameters(self.scopeParam)
 
@@ -119,6 +126,19 @@ class CWCoreAPI(Parameterized):
     def getResults(self, name):
         """Return the requested result widget. It should be registered."""
         return ResultsBase.registeredObjects[name]
+
+    def getGlitcher(self):
+        """Return the current glitcher module object."""
+        return self._glitcher
+
+    @setupSetParam("Glitcher Module")
+    def setGlitcher(self, driver):
+        """Set the current glitcher module object."""
+        if self.getGlitcher():
+            self.getGlitcher().dis()
+        self._glitcher = driver
+        if self.getGlitcher():
+            self.getGlitcher().connectStatus.connect(self.sigConnectStatus.emit)
 
     def getScope(self):
         """Return the current scope module object."""
@@ -218,6 +238,8 @@ class CWCoreAPI(Parameterized):
         self.setProject(ProjectFormat())
         self.project().setProgramName(self.__name__)
         self.project().setProgramVersion(self.__version__)
+        print self.project().datadirectory
+        self.params.load(os.path.join(self.project().datadirectory, "settings.cwset"))
 
     def openProject(self, fname):
         """Open project file"""
@@ -232,6 +254,7 @@ class CWCoreAPI(Parameterized):
         """Save the current opened project to file"""
         if fname is not None:
             self.project().setFilename(fname)
+				
         self.project().save()
 
     def connectScope(self):
@@ -269,6 +292,20 @@ class CWCoreAPI(Parameterized):
         """Disconnect the current target"""
         self.getTarget().dis()
 
+    def connectGlitcher(self):
+        """Connect to the selected glitcher"""
+        try:
+            if self.getGlitcher():
+                self.getGlitcher().con(glitcher=self.getScope())
+        except Warning:
+            sys.excepthook(*sys.exc_info())
+            return False
+        return True
+
+    def disconnectTrigger(self):
+        """Disconnect the current target"""
+        self.getGlitcher().dis()
+
     def doConDis(self):
         """DEPRECATED: It is here just for compatibility reasons"""
         logging.warning('Method doConDis() is deprecated... use connect() or disconnect() instead')
@@ -290,7 +327,7 @@ class CWCoreAPI(Parameterized):
     @setupSetParam("Number of Traces")
     def setNumTraces(self, n):
         """Set the total number or traces for acquisition purposes"""
-        self._numTraces = n
+        self._numTraces = int(float(n))
 
     def getNumTraceSets(self):
         """Return the number of sets/segments"""

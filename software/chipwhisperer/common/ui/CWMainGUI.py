@@ -294,10 +294,12 @@ class CWMainGUI(QMainWindow):
         self.fileMenu.addAction(self.exitAct)
 
         self.projectMenu = self.menuBar().addMenu("&Project")
-        self.saveSettingsAct = QAction('&Save Settings', self, statusTip='Save parameter settings to a file inside the '
-                              'project folder so you can load it latter using the load button in the group settings.',
-                              triggered=self.api.project().saveAllSettings)
-        self.projectMenu.addAction(self.saveSettingsAct)
+			#        self.saveSettingsAct = QAction('&Save Settings', self, statusTip='Save parameter settings to a file inside the '
+			#                              'project folder so you can load it latter using the load button in the group settings.',
+			#                              triggered=self.api.project().saveAllSettings)
+			#        self.projectMenu.addAction(self.saveSettingsAct)
+        self.reloadSettingsAct = QAction('&Reload Settings', self, statusTip='Reload project parameter settings', triggered=self.reloadSettings)
+        self.projectMenu.addAction(self.reloadSettingsAct)
         self.traceManageAct = QAction('&Trace Management', self, statusTip='Add/Remove traces from project.', triggered=self.traceManagerDialog.show)
         self.projectMenu.addAction(self.traceManageAct)
         self.consolidateAct = QAction('&Consolidate', self, statusTip='Copy trace files to project directory.', triggered=self.consolidateDialog)
@@ -316,6 +318,9 @@ class CWMainGUI(QMainWindow):
         self.helpMenu.addAction(QAction('&Check for Updates', self, statusTip='Check for new versions', triggered=self.checkForUpdates))
         self.helpMenu.addAction(self.prefAct)
         self.helpMenu.addAction(QAction('&About', self, statusTip='About dialog', triggered=self.aboutdialog))
+
+    def reloadSettings(self):
+        self.api.params.load(os.path.join(self.api.project().datadirectory, "settings.cwset"))
 
     def checkForUpdates(self):
         try:
@@ -387,7 +392,7 @@ class CWMainGUI(QMainWindow):
         pass
 
     def addExampleScripts(self, scripts):
-        self.exampleScriptAct = QAction('&Example Scripts', self, statusTip='Predefined Scripts')
+        self.exampleScriptAct = QAction('&Pre-configure Scripts', self, statusTip='Predefined Scripts')
         self.projectMenu.addSeparator()
         self.projectMenu.addAction(self.exampleScriptAct)
         subMenu = QMenu("Submenu", self)
@@ -444,6 +449,7 @@ class CWMainGUI(QMainWindow):
         action = self.sender()
         if action:
             self.openProject(action.data())
+            self.reloadSettings()
 
     def openProject(self, fname = None):
         if not self.okToContinue():
@@ -471,6 +477,7 @@ class CWMainGUI(QMainWindow):
             fname = fd.selectedFiles()[0]
 
         self.api.saveProject(fname)
+        self.api.project().saveAllSettings()
         logging.info("Project Saved")
 
     def newProject(self):

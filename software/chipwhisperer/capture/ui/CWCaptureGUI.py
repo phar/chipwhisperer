@@ -57,6 +57,7 @@ class CWCaptureGUI(CWMainGUI):
         self.settingsResultsDock = self.addSettings(ResultsBase.getClassParameter())
         self.settingsScopeDock = self.addSettings(self.api.scopeParam)
         self.settingsTargetDock = self.addSettings(self.api.targetParam)
+        self.settingsGlitchDock = self.addSettings(self.api.glitchParam)
         # self.settingsTraceDock = self.addSettings(self.api.traceParam)
         self.settingsAuxDock = self.addSettings(self.api.auxParam)
 
@@ -66,7 +67,7 @@ class CWCaptureGUI(CWMainGUI):
             if issubclass(v, ActiveTraceObserver):
                 ResultsBase.createNew(k)
 
-        self.tabifyDocks([self.settingsGeneralDock, self.settingsResultsDock, self.settingsScopeDock, self.settingsTargetDock,
+        self.tabifyDocks([self.settingsGeneralDock, self.settingsResultsDock, self.settingsScopeDock, self.settingsTargetDock,self.settingsGlitchDock,
                           # self.settingsTraceDock,
                           self.settingsAuxDock])
 
@@ -82,9 +83,12 @@ class CWCaptureGUI(CWMainGUI):
         else:
             self.targetStatus.setDefaultAction(self.targetStatusActionDis)
 
-        if self.api.getScope() and self.api.getTarget() and \
-                (self.scopeStatus.defaultAction() == self.scopeStatusActionCon or
-                 self.targetStatus.defaultAction() == self.targetStatusActionCon):
+        if self.api.getGlitcher() and self.api.getGlitcher().getStatus():
+            self.glitcherStatus.setDefaultAction(self.glitcherStatusActionCon)
+        else:
+            self.glitcherStatus.setDefaultAction(self.glitcherStatusActionDis)
+
+        if self.api.getScope() and self.api.getTarget() and (self.scopeStatus.defaultAction() == self.scopeStatusActionCon or self.targetStatus.defaultAction() == self.targetStatusActionCon):
             self.captureStatus.setDefaultAction(self.captureStatusActionCon)
         else:
             self.captureStatus.setDefaultAction(self.captureStatusActionDis)
@@ -97,7 +101,7 @@ class CWCaptureGUI(CWMainGUI):
                                    triggered=self.serialTerminal.show)
 
         self.toolMenu.addAction(self.terminalAct)
-        self.glitchMonitorAct = QAction('Glitch Monitor', self, statusTip='Open Glitch Monitor Table',
+        self.glitchMonitorAct = QAction('Glitch Explorer', self, statusTip='Open Glitch Explorer Tool',
                                         triggered=self.glitchMonitor.show)
         self.toolMenu.addAction(self.glitchMonitorAct)
 
@@ -131,6 +135,13 @@ class CWCaptureGUI(CWMainGUI):
         self.targetStatusActionCon = QAction(QIcon(':/images/status_connected.png'), 'Target: Connected', self, triggered=self.doConDisTarget)
         self.targetStatus.setDefaultAction(self.targetStatusActionDis)
 
+        # Glitcher
+        self.glitcherStatus = QToolButton()
+        self.glitcherStatusActionDis = QAction(QIcon(':/images/status_disconnected.png'), 'Target: Disconnected', self, triggered=self.doConDisGlitcher)
+        self.glitcherStatusActionCon = QAction(QIcon(':/images/status_connected.png'), 'Target: Connected', self, triggered=self.doConDisGlitcher)
+        self.glitcherStatus.setDefaultAction(self.glitcherStatusActionDis)
+
+
         toolbar.addAction(self.capture1Act)
         toolbar.addAction(self.captureMAct)
         toolbar.addAction(self.stopCaptureMAct)
@@ -139,6 +150,8 @@ class CWCaptureGUI(CWMainGUI):
         toolbar.addWidget(self.captureStatus)
         toolbar.addWidget(QLabel('Scope:'))
         toolbar.addWidget(self.scopeStatus)
+        toolbar.addWidget(QLabel('Glitcher:'))
+        toolbar.addWidget(self.glitcherStatus)
         toolbar.addWidget(QLabel('Target:'))
         toolbar.addWidget(self.targetStatus)
         toolbar.addSeparator()
@@ -159,6 +172,15 @@ class CWCaptureGUI(CWMainGUI):
         else:
             self.api.disconnectTarget()
             logging.info("Target Disconnected")
+
+    def doConDisGlitcher(self):
+        if self.glitcherStatus.defaultAction() == self.glitcherStatusActionDis:
+            if self.api.connectGlitcher():
+                logging.info("Glitcher Connected")
+        else:
+            self.api.disconnectTarget()
+            logging.info("Glitcher Disconnected")
+
 
     def doConDis(self):
         """Toggle connect button pushed (master): attempts both target & scope connection"""

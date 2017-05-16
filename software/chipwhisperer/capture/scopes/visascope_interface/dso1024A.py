@@ -25,39 +25,42 @@ from chipwhisperer.common.utils import util
 
 
 class VisaScopeInterface_DSO1024A(VisaScope):
-    _name = "Agilent DSO 1024A"
+	def __init__(self):
+		self._name = "Agilent DSO 1024A"
 
-    # TODO: What scales & ranges are allowed on the DSO1024A?
-    xScales = {"500 mS":500E-3, "200 mS":200E-3, "100 mS":100E-3, "50 mS":50E-3,
-               "20 mS":20E-3, "10 mS":10E-3, "5 mS":5E-3, "2 mS":2E-3, "1 mS":1E-3,
-               "500 uS":500E-6, "200 uS":200E-6, "100 uS":100E-6, "50 uS":50E-6,
-               "20 uS":20E-6, "10 uS":10E-6, "5 uS":5E-6, "2uS":2E-6, "1 uS":1E-6}
+		# TODO: What scales & ranges are allowed on the DSO1024A?
+		self.xScales = {"500 mS":500E-3, "200 mS":200E-3, "100 mS":100E-3, "50 mS":50E-3,
+				   "20 mS":20E-3, "10 mS":10E-3, "5 mS":5E-3, "2 mS":2E-3, "1 mS":1E-3,
+				   "500 uS":500E-6, "200 uS":200E-6, "100 uS":100E-6, "50 uS":50E-6,
+				   "20 uS":20E-6, "10 uS":10E-6, "5 uS":5E-6, "2uS":2E-6, "1 uS":1E-6}
 
-    yScales = {"10 V":10, "5 V":5, "2 V":2, "500 mV":500E-3, "200 mV":200E-3, "100 mV":100E-3,
-               "50 mV":50E-3, "20 mV":20E-3, "10 mV":10E-3, "5 mV":5E-3}
+		self.yScales = {"10 V":10, "5 V":5, "2 V":2, "500 mV":500E-3, "200 mV":200E-3, "100 mV":100E-3,
+				   "50 mV":50E-3, "20 mV":20E-3, "10 mV":10E-3, "5 mV":5E-3}
 
-    header = [  ":CHANnel1:PROBe 1X",
-                ":CHANnel1:DISPlay ON",
-                ":CHANnel1:COUPling DC",
-                ":CHANnel2:PROBe 10X",
-                ":CHANnel2:SCALe 1",
-                ":CHANnel2:OFFSet 0",
-                ":CHANnel2:DISPLay ON",
-                ":TRIGger:MODE EDGE",
-                ":TRIGger:EDGE:SOURce CHANnel2",
-                ":TRIGger:EDGE:SLOPe NEGative",
-                ":TRIGger:EDGE:LEVel 2.0",
-                ":TRIGger:EDGE:SWEep NORMal",
-                ":WAVeform:SOURce CHANnel1",
-                ":WAVeform:FORMat WORD",
-                ]
+		self.header = [  ":CHANnel1:PROBe 1X",
+					":CHANnel1:DISPlay ON",
+					":CHANnel1:COUPling DC",
+					":CHANnel2:PROBe 10X",
+					":CHANnel2:SCALe 1",
+					":CHANnel2:OFFSet 0",
+					":CHANnel2:DISPLay ON",
+					":TRIGger:MODE EDGE",
+					":TRIGger:EDGE:SOURce CHANnel2",
+					":TRIGger:EDGE:SLOPe NEGative",
+					":TRIGger:EDGE:LEVel 2.0",
+					":TRIGger:EDGE:SWEep NORMal",
+					":WAVeform:SOURce CHANnel1",
+					":WAVeform:FORMat WORD",
+					]
+		super(VisaScope, self).__init__()
 
     def currentSettings(self):
         # TODO: Delete these?
-        self.XScale = self.visaInst.ask_for_values(":TIMebase:SCALe?")
+        self.XScale = self.visaInst.ask_for_values(":TIMebase:MAIN:SCALe?")
         self.XScale = self.XScale[0]
-        self.XOffset = self.visaInst.ask_for_values(":TIMebase:POSition?")
+        self.XOffset = self.visaInst.ask_for_values(":TIMebase:MAIN:OFFSet?")
         self.XOffset = self.XOffset[0]
+		
         self.YOffset = self.visaInst.ask_for_values(":CHANnel1:OFFSet?")
         self.YOffset = self.YOffset[0]
         self.YScale = self.visaInst.ask_for_values(":CHANnel1:SCALe?")
@@ -116,3 +119,6 @@ class VisaScopeInterface_DSO1024A(VisaScope):
 
         self.dataUpdated.emit(0, self.datapoints, 0, 0)
         return False
+
+    def support(self):
+        return ["DSO 1024A","DSO1024A"]

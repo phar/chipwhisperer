@@ -533,7 +533,7 @@ class ClockSettings(Parameterized):
             {'name': 'Freq Counter', 'type': 'float', 'readonly':True, 'get':self.extFrequency, 'siPrefix':True, 'suffix':'Hz'},
             {'name': 'Freq Counter Src', 'type':'list', 'values':{'EXTCLK Input':0, 'CLKGEN Output':1}, 'set':self.setFreqSrc, 'get':self.freqSrc},
             {'name': 'CLKGEN Settings', 'type':'group', 'children': [
-                {'name':'Input Source', 'type':'list', 'values':["system", "extclk"], 'set':self.setClkgenSrc, 'get':self.clkgenSrc, 'linked':['Desired Frequency', 'Current Frequency']},
+                {'name':'Input Source', 'type':'list', 'values':["intclk", "extclk"], 'set':self.setClkgenSrc, 'get':self.clkgenSrc, 'linked':['Desired Frequency', 'Current Frequency']},
                 {'name':'Input Frequency', 'type':'float', 'limits':(1E6,105E6), 'default':10E6, 'step':1E6, 'siPrefix':True, 'suffix':'Hz',
                     'set':self.setFreqExt, 'get':self.freqExt, 'linked':['Desired Frequency', 'Current Frequency'], 'visible': True},
                 {'name':'Multiply', 'type':'int', 'limits':(2, 256), "default":2, 'set':self.setClkgenMul, 'get':self.clkgenMul, 'linked':['Current Frequency']},
@@ -745,17 +745,17 @@ class ClockSettings(Parameterized):
         self.oa.sendMessage(CODE_WRITE, ADDR_ADVCLK, result)
 
     @setupSetParam(['CLKGEN Settings', 'Input Source'])
-    def setClkgenSrc(self, source="system"):
+    def setClkgenSrc(self, source="intclk"):
         result = self.oa.sendMessage(CODE_READ, ADDR_ADVCLK, maxResp=4)
 
         result[0] = result[0] & ~0x08
 
-        if source == "system":
+        if source == "intclk":
             pass
         elif source == "extclk":
             result[0] = result[0] | 0x08
         else:
-            raise ValueError("source must be 'system' or 'extclk'")
+            raise ValueError("source must be 'intclk' or 'extclk'")
 
         self.oa.sendMessage(CODE_WRITE, ADDR_ADVCLK, result, readMask=self.readMask)
         
@@ -770,7 +770,7 @@ class ClockSettings(Parameterized):
         if self.oa is not None and self.oa.sendMessage(CODE_READ, ADDR_ADVCLK, maxResp=4)[0] & 0x08:
             return "extclk"
         else:
-            return "system"
+            return "intclk"
             
     @setupSetParam(['CLKGEN Settings', 'Input Frequency'])
     def setFreqExt(self, freq):

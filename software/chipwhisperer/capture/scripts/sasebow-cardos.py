@@ -30,7 +30,7 @@ from chipwhisperer.common.scripts.base import UserScriptBase
 
 
 class UserScript(UserScriptBase):
-    _name = "SASEBO-W: AES-128 SASEBO-W Smart Card OS"
+    _name = "SASEBO-W: AES-128 SASEBO-W Smart Card OS - deprecated"
     _description = "SASEBO-W Loaded with ChipWhisperer using Provided AVR Smart Card"
 
     def __init__(self, api):

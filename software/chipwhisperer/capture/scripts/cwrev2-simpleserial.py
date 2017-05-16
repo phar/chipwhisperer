@@ -38,7 +38,7 @@ from chipwhisperer.common.scripts.base import UserScriptBase
 
 
 class UserScript(UserScriptBase):
-    _name = "ChipWhisperer-Rev2: SimpleSerial Target"
+    _name = "ChipWhisperer-Rev2: SimpleSerial Target - deprecated"
     _description = "SimpleSerial with CW Target Board"
 
     def __init__(self, api):

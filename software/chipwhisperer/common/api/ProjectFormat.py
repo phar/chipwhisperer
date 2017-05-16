@@ -75,6 +75,7 @@ class ProjectFormat(object):
         self._traceManager = TraceManager().register()
         self._traceManager.dirty.connect(self.__dirtyCallback)
         self.setFilename(ProjectFormat.untitledFileName)
+
         if __debug__: logging.debug('Created: ' + str(self))
 
     def __dirtyCallback(self):
@@ -103,7 +104,7 @@ class ProjectFormat(object):
     
     def setFileVersion(self, ver):
         self.settingsDict['Project File Version']=ver
-        
+	
     def addWave(self, configfile):
         return       
         
@@ -140,6 +141,7 @@ class ProjectFormat(object):
 
         self.config = ConfigObjProj(infile=self.filename, callback=self.configObjChanged)
         self._traceManager.loadProject(self.filename)
+			#  self.loadSettings()
         self.dirty.setValue(False)
 
     def getDataFilepath(self, filename, subdirectory='analysis'):
@@ -207,7 +209,7 @@ class ProjectFormat(object):
         return self.config[cfgSectionName]
 
     def saveAllSettings(self, fname=None, onlyVisibles=False):
-        """ Save registered parameters to a file, so it can be loaded again latter."""
+        """ Save registered parameters to a file, so it can be loaded again later."""
         if fname is None:
             fname = os.path.join(self.datadirectory, 'settings.cwset')
             logging.info('Saving settings to file: ' + fname)
@@ -225,7 +227,8 @@ class ProjectFormat(object):
             return
 
         self.saveTraceManager()
-            
+
+
         #self.config['Waveform List'] = self.config['Waveform List'] + self.waveList
 
         #Program-Specific Options

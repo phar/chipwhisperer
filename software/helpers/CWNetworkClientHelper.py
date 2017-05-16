@@ -26,18 +26,21 @@ class MyTCPHandler(SocketServer.BaseRequestHandler):
 		#r = ""
 		#print self.data
 		#print r
-
-		proc = subprocess.Popen(self.server.runcommand  + [server.command_flag] + [self.data],  stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1)
+		self.data = ""
+		proc = subprocess.Popen(self.server.runcommand,  stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1)
 		(retdata,rc) = proc.communicate()
-
-		self.request.sendall("r"+("%02x"%len(retdata))+retdata+"\n")
+		#		print retdata
+		res = retdata.split("\r\n")
+		self.request.sendall(res[-3])
 
 if __name__ == "__main__":
 	HOST, PORT = "0.0.0.0", 3137
 	SocketServer.TCPServer.allow_reuse_address = True
 	server = SocketServer.TCPServer((HOST, PORT), MyTCPHandler,bind_and_activate=True)
 	server.command_flag = ""
-	server.runcommand = ["echo", "hello world"]
+	#	server.runcommand = ["echo", "hello world"]
+	server.runcommand = ["C:\\Program Files (x86)\\STMicroelectronics\\STM32 ST-LINK Utility\\ST-LINK Utility\\st-link_cli","-HardRst", "-Dump","0x8000000","1000","foo.bin"]
+	
 	server.allow_reuse_address=True
 	server.server_activate()
 	server.serve_forever()

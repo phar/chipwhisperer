@@ -30,7 +30,7 @@ from chipwhisperer.common.scripts.base import UserScriptBase
 
 
 class UserScript(UserScriptBase):
-    _name = "ChipWhisperer-Lite: SPA SimpleSerial on XMEGA"
+    _name = "ChipWhisperer-Lite: SPA SimpleSerial on XMEGA - deprecated"
     _description = "SimpleSerial with Standard Target for SPA (XMEGA)"
 
     def __init__(self, api):

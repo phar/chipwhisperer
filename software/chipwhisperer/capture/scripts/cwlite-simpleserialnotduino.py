@@ -30,7 +30,7 @@ from chipwhisperer.common.scripts.base import UserScriptBase
 
 
 class UserScript(UserScriptBase):
-    _name = "ChipWhisperer-Lite: AES SimpleSerial on ATMega328P"
+    _name = "ChipWhisperer-Lite: AES SimpleSerial on ATMega328P - deprecated"
     _description = "SimpleSerial with Standard Target for AES (NOTDUINO - ATMega328P)"
 
     def __init__(self, api):

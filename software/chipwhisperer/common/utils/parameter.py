@@ -38,7 +38,6 @@ try:
 except:
     logging.warning("PySide or PyQtGraph not installed, disabling support for pyqtgraph parameters")
 
-
 class Parameterized(object):
     """
     Abstract class that implements basic functionality required by parameterized objects.
@@ -222,6 +221,7 @@ class Parameter(object):
         else:
             if 'addLoadSave' in self.opts and self.opts["addLoadSave"]:
                 self.opts["addLoadSave"] = (self.load, self.save)
+		#self.load()
 
         self.childs = []
         self.ignoredChildren = self.opts.pop("children", [])
@@ -665,7 +665,7 @@ class Parameter(object):
                     continue
 
                 if child.getType() == "int":
-                    value = int(value)
+					value = int(float(value)) #hack to fix weird saving loading issue
                 elif child.getType() == "float":
                     value = float(value)
                 elif child.getType() == "menu" or child.getType() == "label" or child.getType() == "color":

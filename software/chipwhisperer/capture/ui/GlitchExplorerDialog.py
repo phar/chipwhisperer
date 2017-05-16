@@ -27,6 +27,7 @@
 import logging
 import math
 import pickle
+import random
 import sys
 from datetime import datetime
 from PySide.QtCore import *
@@ -56,7 +57,7 @@ class TuningParameter(Parameterized):
             {'name':'Value', 'type':'float', 'key':'curval', 'value':1.0},
             {'name':'Step', 'type':'float', 'key':'step', 'value':1.0, 'action':self.updateParams},
             {'name':'Repeat', 'type':'int', 'key':'repeat', 'value':1, 'action':self.updateParams},
-            {'name':'Mode', 'type':'list', 'key':'mode', 'values':["Linear"], 'value':"Linear", 'action':self.updateParams},
+            {'name':'Mode', 'type':'list', 'key':'mode', 'values':["Linear", "Random"], 'value':"Linear", 'action':self.updateParams},
         ])
         self.cnt = 0
         self.updateParams()
@@ -122,6 +123,28 @@ class TuningParameter(Parameterized):
                     Parameter.setParameter(parameter)
                 except:
                     raise StopIteration("Choose a valid Parameter Path/Value combination. Got: " + str(parameter))
+	
+        elif str.lower(mode) == "Random":
+            self.cnt += 1
+            if self.cnt == self.paramRepeat:
+                # Done this one, next step
+                self.cnt = 0
+                newval = random.randint(self.paramRange[0], self.paramRange[1])# self.paramStep
+
+                if cnt  > abs(self.paramRange[1] - self.paramRange[0]):
+                   self.rangeComplete.emit(self.paramNum)
+
+                # Cast type to required value
+                newval = self.paramType(newval)
+
+                self.paramValueItem.setValue(newval)
+
+                parameter = self.paramScript+[newval]
+                try:
+                    Parameter.setParameter(parameter)
+                except:
+                    raise StopIteration("Choose a valid Parameter Path/Value combination. Got: " + str(parameter))
+		
         else:
             raise ValueError("Unknown Increment Type %s" % mode)
 

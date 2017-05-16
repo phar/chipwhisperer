@@ -62,6 +62,7 @@ class TraceManager(TraceSource):
         for indx, t in enumerate(self.traceSegments):
             config[self.name]['tracefile%d' % indx] = os.path.normpath(os.path.relpath(t.config.configFilename(), os.path.split(configfilename)[0]))
             config[self.name]['enabled%d' % indx] = str(t.enabled)
+
         self.dirty.setValue(False)
 
     def loadProject(self, configfilename):
