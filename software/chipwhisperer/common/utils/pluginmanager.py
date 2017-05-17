@@ -86,7 +86,7 @@ def importModulesInPackage(path):
     normPath = (os.path.normpath(path).replace(".", "/"))
     packages = util.getPyFiles(os.path.join(util.getRootDir(), normPath))
     for package_name in packages:
-		#logging.info(package_name)
+        logging.debug(package_name)
         full_package_name = '%s.%s' % (path, package_name)
         try:
             resp.append(importlib.import_module(full_package_name))
@@ -119,7 +119,7 @@ def getPluginClassesFromModules(modules):
 def putInDict(items, instantiate, *args, **kwargs):
     resp = util.DictType()
     for c in items:
-        logging.info("\t" + str(c))
+        logging.debug("\t" + str(c))
         try:
             if instantiate:
                 item = c(*args, **kwargs)

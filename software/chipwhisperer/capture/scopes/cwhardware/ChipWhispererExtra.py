@@ -27,7 +27,7 @@
 import logging
 import time
 from functools import partial
-import ChipWhispererGlitch
+#import ChipWhispererGlitch
 from chipwhisperer.common.utils.parameter import Parameterized, Parameter, setupSetParam
 
 CODE_READ = 0x80
@@ -50,20 +50,20 @@ class ChipWhispererExtra(Parameterized):
         #self.cwADV = CWAdvTrigger()
 
         self.cwEXTRA = CWExtraSettings(oa, cwtype)
-        self.enableGlitch = True
-        if self.enableGlitch:
-            self.glitch = ChipWhispererGlitch.ChipWhispererGlitch(cwtype, scope, oa)
+		#        self.enableGlitch = True
+		#        if self.enableGlitch:
+		#            self.glitch = ChipWhispererGlitch.ChipWhispererGlitch(cwtype, scope, oa)
 
         self.getParams().append(self.cwEXTRA.getParams())
-        self.getParams().append(self.glitch.getParams())
+	#        self.getParams().append(self.glitch.getParams())
 
-    def armPreScope(self):
-        if self.enableGlitch:
-            self.glitch.armPreScope()
-
-    def armPostScope(self):
-        if self.enableGlitch:
-            self.glitch.armPostScope()
+#def armPreScope(self):
+#        if self.enableGlitch:
+#            self.glitch.armPreScope()
+#
+#    def armPostScope(self):
+#        if self.enableGlitch:
+#            self.glitch.armPostScope()
 
     #def testPattern(self):
     #    desired_freq = 38400 * 3

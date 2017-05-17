@@ -66,7 +66,7 @@ class CWCoreAPI(Parameterized):
         self.sigCampaignDone = util.Signal()
         self.executingScripts = util.Observable(False)
 
-        self.valid_glitchers = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.scopes", True, True) #fixme
+        self.valid_glitchers = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.glitchers", True, True)
         self.valid_scopes = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.scopes", True, True)
         self.valid_targets =  pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.targets", True, True)
         self.valid_traces = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.common.traces", True, True)
@@ -80,7 +80,7 @@ class CWCoreAPI(Parameterized):
         # Initialize default values
         self._project = self._scope = self._target = self._attack =  self._traceFormat = self._acqPattern = self._glitcher = None
         self._attack = self.valid_attacks.get("CPA", None)
-        self._acqPattern = self.valid_acqPatterns["Basic"]
+        self._acqPattern = self.valid_acqPatterns["None"]
         self._auxList = [None]  # TODO: implement it as a list in the whole class
         self._numTraces = 50
         self._numTraceSets = 1
@@ -92,13 +92,13 @@ class CWCoreAPI(Parameterized):
 			{'name':'Target Module', 'key':'targetMod', 'type':'list', 'values':self.valid_targets, 'get':self.getTarget, 'set':self.setTarget},
             {'name':'Trace Format', 'type':'list', 'values':self.valid_traces, 'get':self.getTraceFormat, 'set':self.setTraceFormat},
             {'name':'Auxiliary Module', 'type':'list', 'values':self.valid_aux, 'get':self.getAuxModule, 'set':self.setAux},
+			{'name':'Key/Text Pattern Generator', 'type':'list', 'values':self.valid_acqPatterns, 'get':self.getAcqPattern, 'set':self.setAcqPattern},
             {'name':'Acquisition Settings', 'type':'group', 'children':[
                     {'name':'Number of Traces', 'type':'int', 'limits':(1, 1E9), 'get':self.getNumTraces, 'set':self.setNumTraces, 'linked':['Traces per Set']},
                     {'name':'Number of Sets', 'type':'int', 'limits':(1, 1E6), 'get':self.getNumTraceSets, 'set':self.setNumTraceSets, 'linked':['Traces per Set'], 'tip': 'Break acquisition into N sets, '
                      'which may cause data to be saved more frequently. The default capture driver requires that NTraces/NSets is small enough to avoid running out of system memory '
                      'as each segment is buffered into RAM before being written to disk.'},
                     {'name':'Traces per Set', 'type':'int', 'readonly':True, 'get':self.tracesPerSet},
-                    {'name':'Key/Text Pattern', 'type':'list', 'values':self.valid_acqPatterns, 'get':self.getAcqPattern, 'set':self.setAcqPattern},
             ]},
         ])
 
@@ -189,6 +189,7 @@ class CWCoreAPI(Parameterized):
         self._acqPattern = pat
         if self._acqPattern is not None:
             self._acqPattern.getParams().remove()
+		
         self.getParams().append(self._acqPattern.getParams())
 
     def getNewTrace(self, format):
@@ -296,7 +297,7 @@ class CWCoreAPI(Parameterized):
         """Connect to the selected glitcher"""
         try:
             if self.getGlitcher():
-                self.getGlitcher().con(glitcher=self.getScope())
+                self.getGlitcher().con(glitcher=self.getGlitcher())
         except Warning:
             sys.excepthook(*sys.exc_info())
             return False

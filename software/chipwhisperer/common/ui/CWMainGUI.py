@@ -294,11 +294,7 @@ class CWMainGUI(QMainWindow):
         self.fileMenu.addAction(self.exitAct)
 
         self.projectMenu = self.menuBar().addMenu("&Project")
-			#        self.saveSettingsAct = QAction('&Save Settings', self, statusTip='Save parameter settings to a file inside the '
-			#                              'project folder so you can load it latter using the load button in the group settings.',
-			#                              triggered=self.api.project().saveAllSettings)
-			#        self.projectMenu.addAction(self.saveSettingsAct)
-        self.reloadSettingsAct = QAction('&Reload Settings', self, statusTip='Reload project parameter settings', triggered=self.reloadSettings)
+        self.reloadSettingsAct = QAction('&Reload Settings', self, statusTip='Reload project parameter settings', triggered=self.reloadSettings,shortcut=QKeySequence.Refresh)
         self.projectMenu.addAction(self.reloadSettingsAct)
         self.traceManageAct = QAction('&Trace Management', self, statusTip='Add/Remove traces from project.', triggered=self.traceManagerDialog.show)
         self.projectMenu.addAction(self.traceManageAct)
@@ -578,7 +574,7 @@ def makeApplication(name="Other", doDeleteLater=True):
 
 
 def main():
-    app = makeApplication("Test")
+    app = makeApplication("CW")
     CWMainGUI(CWCoreAPI(), app.applicationName())
     app.exec_()
 
