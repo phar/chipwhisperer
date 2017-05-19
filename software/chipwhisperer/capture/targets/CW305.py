@@ -28,7 +28,7 @@ import time
 from datetime import datetime
 from functools import partial
 import os.path
-from _base import TargetTemplate
+from base import TargetTemplate
 from chipwhisperer.hardware.naeusb.naeusb import NAEUSB
 from chipwhisperer.hardware.naeusb.pll_cdce906 import PLLCDCE906
 from chipwhisperer.hardware.naeusb.fpga import FPGA

@@ -45,7 +45,7 @@ class CWCoreAPI(Parameterized):
     It has a singleton method called CWCoreAPI.getInstance() that returns a reference to the API instance.
     """
 
-    __name__ = "ChipWhisperer"
+    __name__ = "ChipWhisperer-IOAdev"
     __organization__ = "NewAE Technology Inc."
     __version__ = "V3.3.0"
     _name = 'Generic Settings'
@@ -55,6 +55,7 @@ class CWCoreAPI(Parameterized):
         logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
         CWCoreAPI.instance = self
         self.sigNewProject = util.Signal()
+        self.sigConfigurationChange = util.Signal() #change in the scope, target or glitcher, not settings
         self.sigConnectStatus = util.Signal()
         self.sigAttackChanged = util.Signal()
         self.sigNewInputData = util.Signal()
@@ -71,16 +72,17 @@ class CWCoreAPI(Parameterized):
         self.valid_targets =  pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.targets", True, True)
         self.valid_traces = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.common.traces", True, True)
         self.valid_aux = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.auxiliary", True, True)
-        self.valid_acqPatterns =  pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.acq_patterns", True, False)
+        self.valid_acqPatterns =  pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.acq_patterns", True, True)
         self.valid_attacks = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.analyzer.attacks", True, False)
         self.valid_preprocessingModules = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.analyzer.preprocessing", False, True)
-
+        self.valid_stages = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.xystages", False, True)
         self.settings = Settings()
 
         # Initialize default values
-        self._project = self._scope = self._target = self._attack =  self._traceFormat = self._acqPattern = self._glitcher = None
+        self._project = self._stage = self._scope = self._target = self._attack =  self._traceFormat = self._acqPattern = self._glitcher = None
+		
         self._attack = self.valid_attacks.get("CPA", None)
-        self._acqPattern = self.valid_acqPatterns["None"]
+		# self._acqPattern = self.valid_acqPatterns["None"]
         self._auxList = [None]  # TODO: implement it as a list in the whole class
         self._numTraces = 50
         self._numTraceSets = 1
@@ -89,6 +91,7 @@ class CWCoreAPI(Parameterized):
         self.params.addChildren([
             {'name':'Scope Module', 'key':'scopeMod', 'type':'list', 'values':self.valid_scopes, 'get':self.getScope, 'set':self.setScope},
 			{'name':'Glitcher Module', 'key':'glitchMod', 'type':'list', 'values':self.valid_glitchers, 'get':self.getGlitcher, 'set':self.setGlitcher},
+			{'name':'Stage Module', 'key':'stageMod', 'type':'list', 'values':self.valid_stages, 'get':self.getStage, 'set':self.setStage},
 			{'name':'Target Module', 'key':'targetMod', 'type':'list', 'values':self.valid_targets, 'get':self.getTarget, 'set':self.setTarget},
             {'name':'Trace Format', 'type':'list', 'values':self.valid_traces, 'get':self.getTraceFormat, 'set':self.setTraceFormat},
             {'name':'Auxiliary Module', 'type':'list', 'values':self.valid_aux, 'get':self.getAuxModule, 'set':self.setAux},
@@ -127,6 +130,25 @@ class CWCoreAPI(Parameterized):
         """Return the requested result widget. It should be registered."""
         return ResultsBase.registeredObjects[name]
 
+
+    def getStage(self):
+        """Return the current glitcher module object."""
+        return self._stage
+	
+    @setupSetParam("Stage Module")
+    def setStage(self, driver):
+        """Set the current glitcher module object."""
+        if self.getStage():
+            self.getStage().dis()
+		
+        if self._stage != driver:
+            self._stage = driver
+            self.sigConfigurationChange.emit()
+		
+        if self.getStage():
+            logging.info( dir(self.getStage()))
+            self.getStage().connectStatus.connect(self.sigConnectStatus.emit)
+
     def getGlitcher(self):
         """Return the current glitcher module object."""
         return self._glitcher
@@ -136,7 +158,10 @@ class CWCoreAPI(Parameterized):
         """Set the current glitcher module object."""
         if self.getGlitcher():
             self.getGlitcher().dis()
-        self._glitcher = driver
+        if self._glitcher != driver:
+            self._glitcher = driver
+            self.sigConfigurationChange.emit()
+	
         if self.getGlitcher():
             self.getGlitcher().connectStatus.connect(self.sigConnectStatus.emit)
 
@@ -149,7 +174,11 @@ class CWCoreAPI(Parameterized):
         """Set the current scope module object."""
         if self.getScope():
             self.getScope().dis()
-        self._scope = driver
+		
+        if self._scope != driver:
+            self._scope = driver
+            self.sigConfigurationChange.emit()
+
         if self.getScope():
             self.getScope().connectStatus.connect(self.sigConnectStatus.emit)
 
@@ -160,8 +189,13 @@ class CWCoreAPI(Parameterized):
     @setupSetParam("Target Module")
     def setTarget(self, driver):
         """Set the current target module object."""
-        if self.getTarget(): self.getTarget().dis()
-        self._target = driver
+        if self.getTarget():
+			self.getTarget().dis()
+		
+        if self._target != driver:
+            self._target = driver
+            self.sigConfigurationChange.emit()
+	
         if self.getTarget():
             self.getTarget().newInputData.connect(self.sigNewInputData.emit)
             self.getTarget().connectStatus.connect(self.sigConnectStatus.emit)
@@ -189,8 +223,7 @@ class CWCoreAPI(Parameterized):
         self._acqPattern = pat
         if self._acqPattern is not None:
             self._acqPattern.getParams().remove()
-		
-        self.getParams().append(self._acqPattern.getParams())
+            self.getParams().append(self._acqPattern.getParams())
 
     def getNewTrace(self, format):
         """Return a new trace object for the specified format."""

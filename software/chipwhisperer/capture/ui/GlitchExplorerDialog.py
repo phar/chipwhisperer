@@ -170,6 +170,7 @@ class GlitchExplorerDialog(Parameterized, QtFixes.QDialog):
         self.mainSplitter.addWidget(self.table)
 
         self.getParams().register()
+		#self.getParams().setOpts("addLoadSave",(self.getParams().load, self.getParams().save))
         self.getParams().addChildren([
             {'name':'Clear Output Table', 'type':'action', 'action':self.clearTable},
             {'name':'Plot Widget', 'type':'action', 'action':self.openPlotWidget},

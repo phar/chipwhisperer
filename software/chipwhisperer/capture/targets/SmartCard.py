@@ -24,7 +24,7 @@
 #=================================================
 
 from _smartcard_gui import SmartCardGUICard
-from _base import TargetTemplate
+from base import TargetTemplate
 from chipwhisperer.common.utils import pluginmanager
 from chipwhisperer.common.utils.parameter import setupSetParam
 

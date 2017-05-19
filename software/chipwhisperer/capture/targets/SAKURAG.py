@@ -26,7 +26,7 @@ import logging
 import time
 
 import chipwhisperer.capture.scopes._qt as openadc_qt
-from _base import TargetTemplate
+from base import TargetTemplate
 from chipwhisperer.capture.scopes.openadc_interface import ftdi
 from chipwhisperer.common.utils import util
 from chipwhisperer.common.utils.parameter import Parameterized, Parameter, setupSetParam

@@ -25,7 +25,7 @@
 import logging
 
 import hid
-from _base import TargetTemplate
+from base import TargetTemplate
 
 
 class HIDSPI(object):

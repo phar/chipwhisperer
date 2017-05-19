@@ -21,8 +21,8 @@ class VisaScopeInterface_RIGOLDS4000(VisaScope):
 		self.XOffset = 0
 		self.header = []
 
-		self.channels = ["CHANnel1","CHANnel2","CHANnel3","CHANnel4"]
-		self.triggers = ["CHANnel1","CHANnel2","CHANnel3","CHANnel4","EXT","EXT5","ACLine"]
+		self._channels = ["CHANnel1","CHANnel2","CHANnel3","CHANnel4"]
+		self._triggers = ["CHANnel1","CHANnel2","CHANnel3","CHANnel4","EXT","EXT5","ACLine"]
 
 
 		"""

@@ -247,6 +247,9 @@ class Parameter(object):
     def getOpts(self):
         return self.opts
 
+    def setOpts(self,opt,val):
+        self.opts[opt] == val
+	
     def getValue(self, default=None):
         """Return the internal or external value of the parameter"""
         val = self.opts.get("get", None)

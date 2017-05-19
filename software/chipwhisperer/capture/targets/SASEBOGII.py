@@ -23,7 +23,7 @@
 #    along with chipwhisperer.  If not, see <http://www.gnu.org/licenses/>.
 #=================================================
 
-from _base import TargetTemplate
+from base import TargetTemplate
 import unicodedata
 
 try:

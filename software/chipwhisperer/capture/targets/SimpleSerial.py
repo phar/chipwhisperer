@@ -26,7 +26,7 @@ import logging
 
 from usb import USBError
 
-from ._base import TargetTemplate
+from base import TargetTemplate
 from chipwhisperer.common.utils import pluginmanager
 from simpleserial_readers.cwlite import SimpleSerial_ChipWhispererLite
 from chipwhisperer.common.utils.parameter import setupSetParam
@@ -165,8 +165,8 @@ class SimpleSerial(TargetTemplate):
             self.dis()
             raise e
 
-    def loadEncryptionKey(self, key):
-        self.key = key
+    def loadEncryptionKey(self, key): #depricating
+        cself.key = key
         if self.key:
             self.runCommand(self.findParam('cmdkey').getValue())
 
