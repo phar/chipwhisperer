@@ -88,10 +88,10 @@ class CWCaptureGUI(CWMainGUI):
         else:
             self.glitcherStatus.setDefaultAction(self.glitcherStatusActionDis)
 
-        if self.api.getScope() and self.api.getTarget() and (self.scopeStatus.defaultAction() == self.scopeStatusActionCon or self.targetStatus.defaultAction() == self.targetStatusActionCon):
-            self.captureStatus.setDefaultAction(self.captureStatusActionCon)
-        else:
-            self.captureStatus.setDefaultAction(self.captureStatusActionDis)
+#        if self.api.getScope() and self.api.getTarget() and (self.scopeStatus.defaultAction() == self.scopeStatusActionCon or self.targetStatus.defaultAction() == self.targetStatusActionCon):
+#            self.captureStatus.setDefaultAction(self.captureStatusActionCon)
+#        else:
+#            self.captureStatus.setDefaultAction(self.captureStatusActionDis)
 
     def newTargetData(self, data):
         self.glitchMonitor.addResponse(data)
@@ -118,10 +118,10 @@ class CWCaptureGUI(CWMainGUI):
         self.stopCaptureMAct = QAction(QIcon(':/images/stopM.png'), 'Stop Capture', self, triggered=lambda: self.capturingProgressBar.abort(), enabled=False)
 
         # Master
-        self.captureStatus = QToolButton()
-        self.captureStatusActionDis = QAction(QIcon(':/images/status_disconnected.png'), 'Master: Disconnected', self, triggered=self.doConDis)
-        self.captureStatusActionCon = QAction(QIcon(':/images/status_connected.png'), 'Master: Connected', self, triggered=self.doConDis)
-        self.captureStatus.setDefaultAction(self.captureStatusActionDis)
+		#        self.captureStatus = QToolButton()
+		#        self.captureStatusActionDis = QAction(QIcon(':/images/status_disconnected.png'), 'Master: Disconnected', self, triggered=self.doConDis)
+		#        self.captureStatusActionCon = QAction(QIcon(':/images/status_connected.png'), 'Master: Connected', self, triggered=self.doConDis)
+		#        self.captureStatus.setDefaultAction(self.captureStatusActionDis)
 
         # Scope
         self.scopeStatus = QToolButton()
@@ -141,23 +141,35 @@ class CWCaptureGUI(CWMainGUI):
         self.glitcherStatusActionCon = QAction(QIcon(':/images/status_connected.png'), 'Target: Connected', self, triggered=self.doConDisGlitcher)
         self.glitcherStatus.setDefaultAction(self.glitcherStatusActionDis)
 
+        # Stage
+        self.stageStatus = QToolButton()
+        self.stageStatusActionDis = QAction(QIcon(':/images/status_disconnected.png'), 'Target: Disconnected', self, triggered=self.doConDisStage)
+        self.stageStatusActionCon = QAction(QIcon(':/images/status_connected.png'), 'Target: Connected', self, triggered=self.doConDisStage)
+        self.stageStatus.setDefaultAction(self.glitcherStatusActionDis)
+
+
 
         toolbar.addAction(self.capture1Act)
         toolbar.addAction(self.captureMAct)
         toolbar.addAction(self.stopCaptureMAct)
         toolbar.addSeparator()
-        toolbar.addWidget(QLabel('Master:'))
-        toolbar.addWidget(self.captureStatus)
+		#        toolbar.addWidget(QLabel('Master:'))
+		#        toolbar.addWidget(self.captureStatus)
         toolbar.addWidget(QLabel('Scope:'))
         toolbar.addWidget(self.scopeStatus)
         toolbar.addWidget(QLabel('Glitcher:'))
         toolbar.addWidget(self.glitcherStatus)
         toolbar.addWidget(QLabel('Target:'))
         toolbar.addWidget(self.targetStatus)
+        toolbar.addWidget(QLabel('Stage:'))
+        toolbar.addWidget(self.stageStatus)
         toolbar.addSeparator()
         toolbar.addAction(QAction(QIcon(':/images/validate.png'), 'Validate', self, triggered=self.validateSettings))
 
     def doConDisScope(self):
+        if self.api.getScope() == None:
+            self.window.SimpleUserInfoDialog("No Scope Selected","In order to connect to the scope, you need to select one in the general settings tab")
+
         if self.scopeStatus.defaultAction() == self.scopeStatusActionDis:
             if self.api.connectScope():
                 logging.info("Scope Connected")
@@ -178,18 +190,25 @@ class CWCaptureGUI(CWMainGUI):
             if self.api.connectGlitcher():
                 logging.info("Glitcher Connected")
         else:
-            self.api.disconnectTarget()
+            self.api.disconnectGlitcher()
             logging.info("Glitcher Disconnected")
 
-
-    def doConDis(self):
-        """Toggle connect button pushed (master): attempts both target & scope connection"""
-        if self.captureStatus.defaultAction() == self.captureStatusActionDis:
-            if self.api.connect():
-                logging.info("Target and Scope Connected")
+    def doConDisStage(self):
+        if self.stageStatus.defaultAction() == self.stageStatusActionDis:
+            if self.api.connectStage():
+                logging.info("Stage Connected")
         else:
-            if self.api.disconnect():
-                logging.info("Target and Scope Disconnected")
+            self.api.disconnectStage()
+            logging.info("Stage Disconnected")
+
+#    def doConDis(self):
+#        """Toggle connect button pushed (master): attempts both target & scope connection"""
+#        if self.captureStatus.defaultAction() == self.captureStatusActionDis:
+#            if self.api.connect():
+#                logging.info("Target and Scope Connected")
+#        else:
+#            if self.api.disconnect():
+#                logging.info("Target and Scope Disconnected")
 
     def validateSettings(self, warnOnly=False):
         # Validate settings from all modules before starting multi-api

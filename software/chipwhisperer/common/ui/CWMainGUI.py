@@ -218,6 +218,14 @@ class CWMainGUI(QMainWindow):
         else:
             event.ignore()
 
+    def SimpleUserInfoDialog(self,title,text):
+        msgBox = QMessageBox()
+        msgBox.setText(title)
+        msgBox.setInformativeText(text)
+        msgBox.setStandardButtons(QMessageBox.Ok)
+        msgBox.setDefaultButton(QMessageBox.Ok)
+        return msgBox.exec_()
+	
     def helpdialog(self):
         """Helps the User"""
         QMessageBox.about(self, 'Link to Documentation',

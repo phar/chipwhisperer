@@ -24,12 +24,14 @@
 #=================================================
 import logging
 import time
+import copy
 from chipwhisperer.common.utils import util
-
+from datetime import datetime, date, time
+#from chipwhisperer.common.api.CWCoreAPI import CWCoreAPI
 
 class AcquisitionController:
 
-    def __init__(self, scope, target=None, writer=None, auxList=None, keyTextPattern=None):
+    def __init__(self, scope=None, glitcher=None, stage=None, target=None, auxList=None, keyTextPattern=None, format=None):
         self.sigTraceDone = util.Signal()
         self.sigNewTextResponse = util.Signal()
         self.sigPreArm = util.Signal()
@@ -40,18 +42,39 @@ class AcquisitionController:
         self.textin = [0]
         self.textout = [0]
 
+        self.format = format
         self.target = target
         self.scope = scope
-        self.writer = writer
+        self.glitcher = glitcher
+        self.stage = stage
         self.auxList = auxList
         self.keyTextPattern = keyTextPattern
-        self.keyTextPattern.setTarget(target)
-        self.keyTextPattern.initPair()
+        self.writer = None
+		
+        if target != None:
+            self.keyTextPattern.setTarget(target)
+	
+        if self.keyTextPattern != None:
+            self.keyTextPattern.initPair()
 
         if self.auxList is not None:
             for aux in auxList:
                 if aux:
                     aux.captureInit()
+
+
+    def SetupNewTrace(self):
+        """Return a new trace object for the specified format."""
+        if self.format is None:
+            raise Warning("No trace format selected.")
+        self.writer = copy.copy(self.format)
+        self.writer.clear()
+        starttime = datetime.now()
+        self.writerprefix = starttime.strftime('%Y.%m.%d-%H.%M.%S') + "_"
+			#        self.writer.config.setConfigFilename(CWCoreAPI.getInstance().project().datadirectory + "traces/config_" + prefix + ".cfg")
+        self.writer.config.setAttr("prefix", self.writerprefix)
+        self.writer.config.setAttr("date", starttime.strftime('%Y-%m-%d %H:%M:%S'))
+
 
     def targetDoTrace(self):
         if self.target is None or self.target.getName() == "None":
@@ -77,9 +100,9 @@ class AcquisitionController:
         except:
             pass
 
-
-
     def doSingleReading(self):
+        self.SetupNewTrace()
+			
         # Set mode
         if self.auxList:
             for aux in self.auxList:
@@ -89,6 +112,14 @@ class AcquisitionController:
 
         if self.target:
             self.target.reinit()
+
+        if self.stage:
+            self.stage.enableStageMotors()
+            (nx,ny) = self.stage.scanNext()
+            self.stage.setCurrentCoord((nx,ny))
+            stage.stageMovementLatencyPause()
+            self.stage.disableStageMotors()
+            (nx,ny) = stage.getCurrentCoord() #some stages may differ somewhat from the requested position
 
         if self.scope:
             self.sigPreArm.emit()
@@ -125,7 +156,6 @@ class AcquisitionController:
             for aux in self.auxList:
                 if aux:
                     aux.traceDone()
-
         return True
 
     def setMaxtraces(self, maxtraces):
@@ -149,6 +179,9 @@ class AcquisitionController:
         if self.target:
             self.target.init()
 
+        if self.stage:
+            self.stage.newScan()
+
         self.currentTrace = 0
         while self.currentTrace < self.maxtraces:
             if self.doSingleReading():
@@ -156,11 +189,12 @@ class AcquisitionController:
                     if self.writer:
                         self.writer.setKnownKey(self.key)
                         for channelNum in channelNumbers:
-                            self.writer.addTrace(self.scope.channels[channelNum].getTrace(), self.textin, self.textout,
-                                                 self.key, channelNum=channelNum)
+                            self.writer.addTrace(self.scope.channels[channelNum].getTrace(), self.textin, self.textout, self.key, channelNum=channelNum)
                 except ValueError as e:
                     logging.warning('Exception caught in adding trace %d, trace skipped.' % self.currentTrace)
                     logging.debug(str(e))
+				
+                progressBar.updateStatus(i*setSize + self.currentTrace + 1, (i, self.currentTrace))
                 self.sigTraceDone.emit()
                 self.currentTrace += 1
             else:

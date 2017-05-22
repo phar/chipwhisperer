@@ -1,7 +1,7 @@
 import serial
 
 class GCODE():
-	def __init__(self,ballfile, port="/dev/tty.usbserial-AI03DR2E",baud=250000):
+	def __init__(self, port="/dev/tty.usbserial-AI03DR2E",baud=250000):
 		self.port = port
 		self.baud = baud
 		self.ser = None
@@ -76,3 +76,6 @@ class GCODE():
 	
 	def beep(self):
 		self.command("M300")
+
+	def close(self):
+		self.ser.close()

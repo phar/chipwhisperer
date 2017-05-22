@@ -75,7 +75,7 @@ class CWCoreAPI(Parameterized):
         self.valid_acqPatterns =  pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.acq_patterns", True, True)
         self.valid_attacks = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.analyzer.attacks", True, False)
         self.valid_preprocessingModules = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.analyzer.preprocessing", False, True)
-        self.valid_stages = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.xystages", False, True)
+        self.valid_stages = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.xystages", True, True)
         self.settings = Settings()
 
         # Initialize default values
@@ -225,18 +225,18 @@ class CWCoreAPI(Parameterized):
             self._acqPattern.getParams().remove()
             self.getParams().append(self._acqPattern.getParams())
 
-    def getNewTrace(self, format):
-        """Return a new trace object for the specified format."""
-        if format is None:
-            raise Warning("No trace format selected.")
-        tmp = copy.copy(format)
-        tmp.clear()
-        starttime = datetime.now()
-        prefix = starttime.strftime('%Y.%m.%d-%H.%M.%S') + "_"
-        tmp.config.setConfigFilename(CWCoreAPI.getInstance().project().datadirectory + "traces/config_" + prefix + ".cfg")
-        tmp.config.setAttr("prefix", prefix)
-        tmp.config.setAttr("date", starttime.strftime('%Y-%m-%d %H:%M:%S'))
-        return tmp
+#    def getNewTrace(self, format):
+#        """Return a new trace object for the specified format."""
+#        if format is None:
+#            raise Warning("No trace format selected.")
+#        tmp = copy.copy(format)
+#        tmp.clear()
+#        starttime = datetime.now()
+#        prefix = starttime.strftime('%Y.%m.%d-%H.%M.%S') + "_"
+#        tmp.config.setConfigFilename(CWCoreAPI.getInstance().project().datadirectory + "traces/config_" + prefix + ".cfg")
+#        tmp.config.setAttr("prefix", prefix)
+#        tmp.config.setAttr("date", starttime.strftime('%Y-%m-%d %H:%M:%S'))
+#        return tmp
 
     def getTraceFormat(self):
         """Return the selected trace format."""
@@ -380,7 +380,8 @@ class CWCoreAPI(Parameterized):
         """Capture one trace"""
         try:
             self.sigNewCapture.emit()
-            ac = AcquisitionController(self.getScope(), self.getTarget(), writer=None, auxList=self._auxList, keyTextPattern=self.getAcqPattern())
+            ac = AcquisitionController(self.getScope(),self.getGlitcher(), self.getStage(), self.getTarget(), auxList=self._auxList, keyTextPattern=self.getAcqPattern(),format=self.getTraceFormat())
+#            ac = AcquisitionController(self.getScope(),self.getGlitcher(), self.getStage(), self.getTarget(), writer=None, auxList=self._auxList, keyTextPattern=self.getAcqPattern(),self.getTraceFormat())
             ac.sigPreArm.connect(self.sigPreArm.emit)
             ac.sigNewTextResponse.connect(self.sigNewTextResponse.emit)
             if self.getTarget():
@@ -404,17 +405,21 @@ class CWCoreAPI(Parameterized):
             for i in range(0, self._numTraceSets):
                 if progressBar.wasAborted(): break
                 if self.getTraceFormat() is not None:
-                    currentTrace = self.getNewTrace(self.getTraceFormat())
-                    # Load trace writer information
-                    prefix = currentTrace.config.attr("prefix")[:-1]
-                    currentTrace.config.setAttr("targetHW", self.getTarget().getName() if self.getTarget() is not None else "None")
-                    currentTrace.config.setAttr("targetSW", os.path.split(Programmer.lastFlashedFile)[1])
-                    currentTrace.config.setAttr("scopeName", self.getScope().getName() if self.getScope() is not None else "None")
-                    currentTrace.config.setAttr("notes", "AckPattern: " + str(self.getAcqPattern()) + "; Aux: " + ', '.join(item.getName() for item in self._auxList if item))
-                    currentTrace.setTraceHint(setSize)
-
-                    if waveBuffer is not None:
-                        currentTrace.setTraceBuffer(waveBuffer)
+#                    currentTrace = self.getNewTrace(self.getTraceFormat())
+#                    # Load trace writer information
+#                    prefix = currentTrace.config.attr("prefix")[:-1]
+#                    currentTrace.config.setAttr("targetHW", self.getTarget().getName() if self.getTarget() is not None else "None")
+#                    currentTrace.config.setAttr("targetSW", os.path.split(Programmer.lastFlashedFile)[1])
+#                    currentTrace.config.setAttr("scopeName", self.getScope().getName() if self.getScope() is not None else "None")
+#                    currentTrace.config.setAttr("notes", "AckPattern: " + str(self.getAcqPattern()) + "; Aux: " + ', '.join(item.getName() for item in self._auxList if item))
+#                    currentTrace.setTraceHint(setSize)
+#
+#                    if waveBuffer is not None:
+#                        currentTrace.setTraceBuffer(waveBuffer)
+                    pass
+                    prefix = datetime.now().strftime('%Y.%m.%d-%H.%M.%S')
+                    currentTrace = None
+				
                 else:
                     currentTrace = None
                     prefix = datetime.now().strftime('%Y.%m.%d-%H.%M.%S')
@@ -424,28 +429,33 @@ class CWCoreAPI(Parameterized):
                         aux.setPrefix(prefix)
 
                 self.sigNewCapture.emit()
-                ac = AcquisitionController(self.getScope(), self.getTarget(), currentTrace, self._auxList, self.getAcqPattern())
+#                ac = AcquisitionController(self.getScope(),self.getGlitcher(), self.getStage(), self.getTarget(), currentTrace, self._auxList, self.getAcqPattern(), self.getTraceFormat())
+                ac = AcquisitionController(self.getScope(),self.getGlitcher(), self.getStage(), self.getTarget(), self._auxList, self.getAcqPattern(), self.getTraceFormat())
+
                 ac.sigPreArm.connect(self.sigPreArm.emit)
                 ac.setMaxtraces(setSize)
                 ac.sigNewTextResponse.connect(self.sigNewTextResponse.emit)
                 ac.sigTraceDone.connect(self.sigTraceDone.emit)
-                __pb = lambda: progressBar.updateStatus(i*setSize + ac.currentTrace + 1, (i, ac.currentTrace))
-                ac.sigTraceDone.connect(__pb)
+				
+#                __pb = lambda: progressBar.updateStatus(i*setSize + ac.currentTrace + 1, (i, ac.currentTrace))
+#                ac.sigTraceDone.connect(__pb)
+
                 self.sigCampaignStart.emit(prefix)
+				
                 ac.doReadings(tracesDestination=self.project().traceManager(), progressBar=progressBar)
 
-                if currentTrace is not None:
-                    self.project().saveAllSettings(os.path.dirname(currentTrace.config.configFilename()) + "/%s_settings.cwset" % prefix, onlyVisibles=True)
-                    waveBuffer = currentTrace.traces  # Re-use the wave buffer to avoid memory reallocation
+#                if currentTrace is not None:
+#                    self.project().saveAllSettings(os.path.dirname(currentTrace.config.configFilename()) + "/%s_settings.cwset" % prefix, onlyVisibles=True)
+#                    waveBuffer = currentTrace.traces  # Re-use the wave buffer to avoid memory reallocation
                 self.sigCampaignDone.emit()
                 tcnt += setSize
 
                 if progressBar.wasAborted():
                     break
 
-            if currentTrace is not None:
-                currentTrace.unloadAllTraces()  # Required in order to make the GC work properly :(
-                self._traceFormat.unloadAllTraces()
+#            if currentTrace is not None:
+#                currentTrace.unloadAllTraces()  # Required in order to make the GC work properly :(
+#                self._traceFormat.unloadAllTraces()
         return True
 
     def runScriptModule(self, mod, funcName="run"):

@@ -49,7 +49,6 @@ class VisaScopeInterface(ScopeTemplate, Plugin):
 			{'name':'Query Scope', 'key':'qscope', 'type':'action', 'action':self.queryscope},
 			{'name':'Reset Scope', 'key':'rscope', 'type':'action', 'action':self.resetscope},
 			{'name':'Sample Rate', 'key':'sampsper', 'type':'float', 'siPrefix': True, 'suffix': 'Sa/S', 'value':0},
-
 			{'name':'X-Scale', 'key':'xscale', 'type':'float', 'value':0},
 			{'name':'Y-Scale', 'key':'yscale', 'type':'float', 'value':0},
 			 {'name':'Y-Offset', 'key':'yoffset', 'type':'float', 'step':1E-3, 'siPrefix': True, 'suffix': 'V', 'value':0},

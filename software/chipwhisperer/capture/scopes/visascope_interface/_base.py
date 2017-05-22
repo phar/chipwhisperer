@@ -1,4 +1,4 @@
-# Authors: Colin O'Flynn
+pen # Authors: Colin O'Flynn
 #
 # Find this and more at newae.com - this file is part of the chipwhisperer
 # project, http://www.assembla.com/spaces/chipwhisperer
@@ -32,11 +32,24 @@ class VisaScope(Parameterized,Plugin):
 
 	header = ""
 	
-	channels = ["None"]
-	triggers = ["None"]
-
+	_channels = ["None"]
+	_triggers = ["None"]
+	_channel = None
+	
 	def __init__(self):
+		
 		self.dataUpdated = util.Signal()
+		self.getParams().addChildren([
+			{'name':'Channel','key':'chan','type':'list', 'values':self._channels, 'get':self.getChannel, 'set':self.setChannel},
+		])
+	
+		self.newScan()
+
+	def getChannel(self):
+		return self._channel
+	
+	def setChannel(self,channel,blockSignal=None):
+		self._channel = channel
 
 	def con(self, constr):
 		logging.info(self.visaInst.ask("*IDN?"))
@@ -100,8 +113,8 @@ class VisaScope(Parameterized,Plugin):
 		return datapoints
 
 	def updateChannels(self):
-		return self.channels
+		return self._channels
 	
 	def updateTriggers(self):
-		return self.triggers
+		return self._triggers
 
