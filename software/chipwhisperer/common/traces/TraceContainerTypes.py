@@ -28,9 +28,15 @@ try:
     import TraceContainerMySQL
 except ImportError:
     TraceContainerMySQL = None
+try:
+	import TraceContainerSQLite
+except ImportError:
+	TraceContainerSQLite = None
 
 import TraceContainerDPAv3
 
 TraceContainerFormatList = {"native":TraceContainerNative.TraceContainerNative, "dpav3":TraceContainerDPAv3.TraceContainerDPAv3 }
 if TraceContainerMySQL is not None:
     TraceContainerFormatList["mysql"] = TraceContainerMySQL.TraceContainerMySQL
+if TraceContainerSQLite is not None:
+	TraceContainerFormatList["sqlite"] = TraceContainerSQLite.TraceContainerSQLite

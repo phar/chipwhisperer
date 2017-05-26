@@ -74,13 +74,15 @@ class AcqKeyTextPattern_Base(Parameterized, Plugin):
 	def setInitialText(self, initialText, binaryText=False):
 		pass
 
-	def initPair(self):
+	def initAttackVars(self):
 		"""Called before a capture run, does not return anything"""
 		raise AttributeError("This needs to be reimplemented")
 
-	def newPair(self):
+	def nextAttackVars(self):
 		"""Called when a new encryption pair is requested"""
 		raise AttributeError("This needs to be reimplemented")
+
+
 
 	def __str__(self):
 		return self.getName()
@@ -95,12 +97,12 @@ class AcqKeyTextPattern_Base(Parameterized, Plugin):
 	def setRange(self, range,blockSignal=None):
 		self.range = range
 		pass
-	
+
 	def getRange(self):
 		return self.range
 
 	def getEndian(self):
 		return self._endian
-	
+
 	def setEndian(self, endian,blockSignal=None):
 		self._endian = endian

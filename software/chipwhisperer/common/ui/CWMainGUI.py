@@ -218,13 +218,6 @@ class CWMainGUI(QMainWindow):
         else:
             event.ignore()
 
-    def SimpleUserInfoDialog(self,title,text):
-        msgBox = QMessageBox()
-        msgBox.setText(title)
-        msgBox.setInformativeText(text)
-        msgBox.setStandardButtons(QMessageBox.Ok)
-        msgBox.setDefaultButton(QMessageBox.Ok)
-        return msgBox.exec_()
 	
     def helpdialog(self):
         """Helps the User"""
@@ -337,7 +330,7 @@ class CWMainGUI(QMainWindow):
                     version = line.split('=')[1]
                     break
             if version is not None:
-                version = version.lstrip(' "').rstrip(' "')
+                version = version.lstrchipwhisperer/common/ui/CWMainGUI.pyip(' "').rstrip(' "')
                 if self.api.__version__ == version:
                     message = "Your current version is already the most recent one."
                 else:

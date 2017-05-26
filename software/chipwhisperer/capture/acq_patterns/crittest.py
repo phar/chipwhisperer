@@ -53,7 +53,8 @@ class AcqKeyTextPattern_CRITTest(AcqKeyTextPattern_Base):
     def _initPattern(self):
         pass
 
-    def initPair(self):
+
+    def initAttackVars(self):
         length = self.keyLen()
         if length <= 32:
             self._key = util.hexStrToByteArray("01 23 45 67 89 ab cd ef 12 34 56 78 9a bc de f0 23 45 67 89 ab cd ef 01 34 56 78 9a bc de f0 12")[:length]
@@ -74,8 +75,10 @@ class AcqKeyTextPattern_CRITTest(AcqKeyTextPattern_Base):
         self.findParam("text").setValue(" ".join(["%02X" % b for b in self._interleavedPlaintext]), init=True)
 
         self.group1 = True
+        return {"key":None, "textin":None, "textout":None}
 
-    def newPair(self):
+
+    def nextAttackVars(self):
         if self.group1:
             self.group1 = False
             self._textin = self._textin1
@@ -94,4 +97,4 @@ class AcqKeyTextPattern_CRITTest(AcqKeyTextPattern_Base):
         # Check key works with target
         self.validateKey()
 
-        return self._key, self._textin
+        return {"key":self._key, "textin":self._textin}

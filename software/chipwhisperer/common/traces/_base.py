@@ -32,255 +32,259 @@ from chipwhisperer.common.utils.parameter import Parameterized, Parameter
 
 
 class TraceContainer(Parameterized, Plugin):
-    """
-    TraceContainer holds traces for the system to operate on. This can include both reading in traces for analysis, and
-    writing traces to disk.
-    
-    This class is normally used as a base class for some specific format. For example the 'TraceFormatNative' class
-    adds functions for reading/storing data in the 'native' ChipWhisperer format.
-    """
-    _name = "Trace Configuration"
-    
-    def __init__(self, configfile=None):
-        self.configfile = configfile
-        self.fmt = None
-        self.getParams().register()
-        self.getParams().addChildren([
-                {'name':'Config File', 'key':'cfgfile', 'type':'str', 'readonly':True, 'value':''},
-                {'name':'Format', 'key':'format', 'type':'str', 'readonly':True, 'value':''},
-        ])
-        self.clear()
+	"""
+	TraceContainer holds traces for the system to operate on. This can include both reading in traces for analysis, and
+	writing traces to disk.
 
-    def clear(self):
-        self.config = _cfgfile.TraceContainerConfig(configfile=self.configfile)
-        self.textins = []
-        self.textouts = []
-        self.keylist = []
-        self.knownkey = None
-        self.dirty = False
-        self.tracedtype = np.double
-        self.traces = None
-        self.tracehint = 1
-        self.pointhint = 0
-        self._numTraces = 0
-        self._isloaded = False
+	This class is normally used as a base class for some specific format. For example the 'TraceFormatNative' class
+	adds functions for reading/storing data in the 'native' ChipWhisperer format.
+	"""
+	_name = "Trace Configuration"
 
-    def setDirty(self, dirty):
-        self.dirty = dirty
-        
-    def updateConfigData(self):
-        return
+	def __init__(self, configfile=None):
+		self.configfile = configfile
+		self.fmt = None
+		self.getParams().register()
+		self.getParams().addChildren([
+				{'name':'Config File', 'key':'cfgfile', 'type':'str', 'readonly':True, 'value':''},
+				{'name':'Format', 'key':'format', 'type':'str', 'readonly':True, 'value':''},
+		])
+		self.clear()
 
-    def numPoints(self):
-        try:        
-            return self.traces.shape[1]
-        except:
-            return 0
-        
-    def setTraceBuffer(self, tracebuffer):
-        """Reuse a trace buffer allocated elsewhere"""
-        self.traces = tracebuffer
+	def clear(self):
+		self.config = _cfgfile.TraceContainerConfig(configfile=self.configfile)
+		self.textins = []
+		self.textouts = []
+		self.keylist = []
+		self.dirty = False
+		self.tracedtype = np.double
+		self.traces = None
+		self.tracehint = 1
+		self.pointhint = 0
+		self._numTraces = 0
+		self._isloaded = False
+		self.attackvars = {"key":[],"textin":[],"textout":[]}
 
-    def setTraceHint(self, traces):
-        self.tracehint = traces
-        
-    def setPointHint(self, points):
-        self.pointhint = points
+	def setDirty(self, dirty):
+		self.dirty = dirty
+		
+	def updateConfigData(self):
+		return
 
-    def numTraces(self):
-        cfint = int(self.config.attr("numTraces"))
-        if cfint != self._numTraces:
-            self._numTraces = max(cfint, self._numTraces)
-        return self._numTraces
+	def numPoints(self):
+		try:        
+			return self.traces.shape[1]
+		except:
+			return 0
+		
+	def setTraceBuffer(self, tracebuffer):
+		"""Reuse a trace buffer allocated elsewhere"""
+		self.traces = tracebuffer
 
-    def addTrace(self, trace, textin, textout, key, dtype=np.double, channelNum=0):
-        if channelNum!=0:
-            raise NotImplementedError
-        self.addWave(trace, dtype)
-        self.addTextin(textin)
-        self.addTextout(textout)
-        self.addKey(key)
+	def setTraceHint(self, traces):
+		self.tracehint = traces
+		
+	def setPointHint(self, points):
+		self.pointhint = points
 
-    def writeDataToConfig(self):
-        self.config.setAttr("numTraces", self._numTraces)
-        self.config.setAttr("numPoints", self.numPoints())      
+	def numTraces(self):
+		cfint = int(self.config.attr("numTraces"))
+		if cfint != self._numTraces:
+			self._numTraces = max(cfint, self._numTraces)
+		return self._numTraces
 
-    def addWave(self, trace, dtype=None):
-        try:
-            if self.traces is None:
-                if dtype is None:
-                    dtype = np.double
-                self.tracedtype = dtype
-                self.traces = np.zeros((self.tracehint, len(trace)), dtype=dtype)
-                self.traces[self._numTraces][:] = trace
-            else:
-                # Check can fit this
-                if self.traces.shape[0] <= self._numTraces:
-                    if self._numTraces >= self.tracehint:
-                        # Tracehint wrong - increase by 25
-                        self.tracehint += 25
+	def addTrace(self, trace, attackvars, dtype=np.double,channelNum=None):
+	#def addTrace(self, trace, textin, textout, key, dtype=np.double, channelNum=0):
+		if channelNum!=0:
+			raise NotImplementedError
+		self.addWave(trace, dtype)
 
-                    # Do a resize now to allocate more memory
-                    self.traces.resize((self.tracehint, self.traces.shape[1]))
+		if "textin" in attackvars:
+			self.addTextin(self.attackvars['textin'])#legacy
+		if "textout" in attackvars:
+			self.addTextout(self.attackvars['textout'])#legacy
+		if "key" in attackvars:
+			self.addKey(self.attackvars['key'])#legacy
 
-                #Validate traces fit - if too short warn & pad (prevents aborting long captures)
-                pad = self.traces.shape[1] - len(trace)
-                if pad > 0:
-                    logging.warning('Trace too short (length=%d)' % len(trace) + " *This MAY SUGGEST DATA CORRUPTION*")
-                    logging.warning('Padding with %d zero points' % pad)
-                    trace.extend([0]*pad)
+	def writeDataToConfig(self):
+		self.config.setAttr("numTraces", self._numTraces)
+		self.config.setAttr("numPoints", self.numPoints())      
 
-                self.traces[self._numTraces][:] = trace
-        except MemoryError:
-            raise Warning("Failed to allocate/resize array for %d x %d, if you have sufficient memory it may be fragmented. Use smaller segments and retry." % (self.tracehint, self.traces.shape[1]))
-            
-        self._numTraces += 1
-        self.setDirty(True)
-        self.writeDataToConfig()
+	def addWave(self, trace, dtype=None):
+		try:
+			if self.traces is None:
+				if dtype is None:
+					dtype = np.double
+				self.tracedtype = dtype
+				self.traces = np.zeros((self.tracehint, len(trace)), dtype=dtype)
+				self.traces[self._numTraces][:] = trace
+			else:
+				# Check can fit this
+				if self.traces.shape[0] <= self._numTraces:
+					if self._numTraces >= self.tracehint:
+						# Tracehint wrong - increase by 25
+						self.tracehint += 25
 
-    def setKnownKey(self, key):
-        self.knownkey = key
+					# Do a resize now to allocate more memory
+					self.traces.resize((self.tracehint, self.traces.shape[1]))
 
-    def addKey(self, key):
-        self.keylist.append(key)
+				#Validate traces fit - if too short warn & pad (prevents aborting long captures)
+				pad = self.traces.shape[1] - len(trace)
+				if pad > 0:
+					logging.warning('Trace too short (length=%d)' % len(trace) + " *This MAY SUGGEST DATA CORRUPTION*")
+					logging.warning('Padding with %d zero points' % pad)
+					trace.extend([0]*pad)
 
-    def addTextin(self, data):
-        self.textins.append(data)
-        
-    def addTextout(self, data):
-        self.textouts.append(data)
-        
-    def getTrace(self, n):
-        data = self.traces[n]
+				self.traces[self._numTraces][:] = trace
+		except MemoryError:
+			raise Warning("Failed to allocate/resize array for %d x %d, if you have sufficient memory it may be fragmented. Use smaller segments and retry." % (self.tracehint, self.traces.shape[1]))
+			
+		self._numTraces += 1
+		self.setDirty(True)
+		self.writeDataToConfig()
 
-        #Following line will normalize all traces relative to each
-        #other by mean & standard deviation
-        #data = (data - np.mean(data)) / np.std(data)
-        return data
+	def setKnownKey(self, key):
+		self.attackvars['knownkey'] = key
 
-    def getTextin(self, n):
-        return self.textins[n]
+	def addKey(self, key):
+		self.attackvars['key'].append(key)
 
-    def getTextout(self, n):
-        return self.textouts[n]
+	def addTextin(self, data):
+		self.attackvars['textin'].append(data)
+		
+	def addTextout(self, data):
+		self.attackvars['textout'].append(data)
 
-    def getKnownKey(self, n=0):
-        if hasattr(self, 'keylist'):
-            if self.keylist is not None:
-                return self.keylist[n]
+	def getTrace(self, n):
+		data = self.traces[n]
 
-        return self.knownkey
-    
-    def getAuxDataConfig(self, newmodule):
-        """
-        Get auxilary data section in config file, searches based on both 'modname'
-        and 'uniquedict'. Checks file itself & NOT the local database, since the
-        auxilary data is not loaded into database.
-        """
+		#Following line will normalize all traces relative to each
+		#other by mean & standard deviation
+		#data = (data - np.mean(data)) / np.std(data)
+		return data
 
-        # Get all section names
-        for sname in self.config.config.keys():
-            # Find if starts with 'Aux Data'
-            if sname.startswith("Aux Data"):
+	def getTextin(self, n):
+		return self.textins[n]
 
-                # print "Found %s" % sname
+	def getTextout(self, n):
+		return self.textouts[n]
 
-                # Find if module name matches
-                if sname.endswith(newmodule["sectionName"]):
+	def getKnownKey(self, n=0):
+	#        if hasattr(self, 'keylist'):
+	#            if self.keylist is not None:
+	#                return self.keylist[n]
+		return self.attackvars['knownkey']
 
-                    # print "Found %s" % sname
+	def getAuxDataConfig(self, newmodule):
+		"""
+		Get auxilary data section in config file, searches based on both 'modname'
+		and 'uniquedict'. Checks file itself & NOT the local database, since the
+		auxilary data is not loaded into database.
+		"""
 
-                    # Finally confirm unique dictionary values
-                    for k in newmodule["values"].keys():
-                        try:
-                            if newmodule["values"][k]["definesunique"]:
-                                try:
-                                    if str(self.config.config[sname][k]) != str(newmodule["values"][k]["value"]):
-                                        return None
-                                except KeyError:
-                                    return None
-                        except KeyError:
-                            pass
+		# Get all section names
+		for sname in self.config.config.keys():
+			# Find if starts with 'Aux Data'
+			if sname.startswith("Aux Data"):
 
-                    return self.config.config[sname]
-        return None
+				# print "Found %s" % sname
 
-    def addAuxDataConfig(self, newmodule):
-        """Add a new module to the config file, place in aux data"""
-        # newmodule is a dict of data
+				# Find if module name matches
+				if sname.endswith(newmodule["sectionName"]):
 
-        # sectionName will be prepended with "Aux Data N - ", where NNNN
-        # is a sequential number. The original section name will be called
-        # .originalSectionName, which can be used when searching the system.
-        # the NNNN will be also written as an integer to the .auxNumber member
+					# print "Found %s" % sname
 
-        newdict = copy.deepcopy(newmodule)
-        
-        #Check dictionary
-        maxNumber = 0
-        for ad in self.config.attrList:
-            if hasattr(ad, "auxNumber"):
-                maxNumber = max(maxNumber, ad.auxNumber + 1)
+					# Finally confirm unique dictionary values
+					for k in newmodule["values"].keys():
+						try:
+							if newmodule["values"][k]["definesunique"]:
+								try:
+									if str(self.config.config[sname][k]) != str(newmodule["values"][k]["value"]):
+										return None
+								except KeyError:
+									return None
+						except KeyError:
+							pass
 
-        #Check configuration file
-        for sname in self.config.config.keys():
-            # Find if starts with 'Aux Data'
-            if sname.startswith("Aux Data"):
-                maxNumber = max(int(re.findall(r'\d+', sname)[0]) + 1, maxNumber)
+					return self.config.config[sname]
+		return None
 
-        newdict["auxNumber"] = maxNumber
-        newdict["originalSectionName"] = newdict["sectionName"]
-        newdict["sectionName"] = "Aux Data %04d - " % maxNumber + newdict["sectionName"]
+	def addAuxDataConfig(self, newmodule):
+		"""Add a new module to the config file, place in aux data"""
+		# newmodule is a dict of data
 
-        self.config.attrList.append(newdict)
-        self.config.syncFile(sectionname=newdict["sectionName"])
+		# sectionName will be prepended with "Aux Data N - ", where NNNN
+		# is a sequential number. The original section name will be called
+		# .originalSectionName, which can be used when searching the system.
+		# the NNNN will be also written as an integer to the .auxNumber member
 
-        return newdict
+		newdict = copy.deepcopy(newmodule)
+		
+		#Check dictionary
+		maxNumber = 0
+		for ad in self.config.attrList:
+			if hasattr(ad, "auxNumber"):
+				maxNumber = max(maxNumber, ad.auxNumber + 1)
 
-    def prepareDisk(self):
-        """Placeholder called after creating a new file setup, but before actually writing traces to it"""
-        
-        #if self.traces is None:
-        #    self.traces = np.zeros((self.tracehint, self.pointhint))
-        
-    def loadAllConfig(self):
-        """Placeholder for loading configuration data ONLY. May not be required."""
-        pass
-    
-    def loadAllTraces(self, directory=None, prefix=""):
-        """Placeholder for load command. May not actually read everything into memory depending on format."""
-        self._isloaded = True
-        raise AttributeError("%s doesn't have this method implemented"%self.__class__.__name__)
+		#Check configuration file
+		for sname in self.config.config.keys():
+			# Find if starts with 'Aux Data'
+			if sname.startswith("Aux Data"):
+				maxNumber = max(int(re.findall(r'\d+', sname)[0]) + 1, maxNumber)
 
-    def unloadAllTraces(self):
-        """Placeholder for unload command. If loadAllTraces unloaded into memory, this may drop from memory. May not be implemented."""
-        self._isloaded = False
+		newdict["auxNumber"] = maxNumber
+		newdict["originalSectionName"] = newdict["sectionName"]
+		newdict["sectionName"] = "Aux Data %04d - " % maxNumber + newdict["sectionName"]
 
-    def saveAuxData(self, extraname, data):
-        """Placeholder for command to save auxiliary data into some location which follows traces (e.g. same database/folder with same prefix.)"""
-        raise AttributeError("%s doesn't have this method implemented" % self.__class__.__name__)
-    
-    def saveAllTraces(self, directory, prefix=""):
-        """Placeholder for save command."""
-        raise AttributeError("%s doesn't have this method implemented"%self.__class__.__name__)
-    
-    def copyTo(self, srcTraces=None, srcFormat=None):
-        """Placeholder for copy/import command. Different from load as copies data INTO this classes format, possibly from another format"""
-        raise AttributeError("%s doesn't have this method implemented"%self.__class__.__name__)
-    
-    def closeAll(self, clearTrace=True, clearText=True, clearKeys=True):
-        """Writer is done, can close/save any files."""               
-        #raise AttributeError("%s doesn't have this method implemented"%self.__class__.__name__)
-        pass
+		self.config.attrList.append(newdict)
+		self.config.syncFile(sectionname=newdict["sectionName"])
 
-    def validateSettings(self):
-        """Check settings, log any messages to special setup window"""
-        return []
+		return newdict
 
-    def isLoaded(self):
-        """Returns true if you can use getTrace, getTextin, etc methods"""
-        return self._isloaded
-        
+	def prepareDisk(self):
+		"""Placeholder called after creating a new file setup, but before actually writing traces to it"""
+		
+		#if self.traces is None:
+		#    self.traces = np.zeros((self.tracehint, self.pointhint))
+		
+	def loadAllConfig(self):
+		"""Placeholder for loading configuration data ONLY. May not be required."""
+		pass
+
+	def loadAllTraces(self, directory=None, prefix=""):
+		"""Placeholder for load command. May not actually read everything into memory depending on format."""
+		self._isloaded = True
+		raise AttributeError("%s doesn't have this method implemented"%self.__class__.__name__)
+
+	def unloadAllTraces(self):
+		"""Placeholder for unload command. If loadAllTraces unloaded into memory, this may drop from memory. May not be implemented."""
+		self._isloaded = False
+
+	def saveAuxData(self, extraname, data):
+		"""Placeholder for command to save auxiliary data into some location which follows traces (e.g. same database/folder with same prefix.)"""
+		raise AttributeError("%s doesn't have this method implemented" % self.__class__.__name__)
+
+	def saveAllTraces(self, directory, prefix=""):
+		"""Placeholder for save command."""
+		raise AttributeError("%s doesn't have this method implemented"%self.__class__.__name__)
+
+	def copyTo(self, srcTraces=None, srcFormat=None):
+		"""Placeholder for copy/import command. Different from load as copies data INTO this classes format, possibly from another format"""
+		raise AttributeError("%s doesn't have this method implemented"%self.__class__.__name__)
+
+	def closeAll(self, clearTrace=True, clearText=True, clearKeys=True):
+		"""Writer is done, can close/save any files."""               
+		#raise AttributeError("%s doesn't have this method implemented"%self.__class__.__name__)
+		pass
+
+	def validateSettings(self):
+		"""Check settings, log any messages to special setup window"""
+		return []
+
+	def isLoaded(self):
+		"""Returns true if you can use getTrace, getTextin, etc methods"""
+		return self._isloaded
+		
         
 if __name__ == "__main__":
     test = TraceContainer()

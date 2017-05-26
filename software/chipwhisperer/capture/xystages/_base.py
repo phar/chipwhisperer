@@ -3,6 +3,7 @@ import logging
 from chipwhisperer.common.utils.pluginmanager import Plugin
 from chipwhisperer.common.utils.parameter import Parameterized, Parameter
 from chipwhisperer.common.utils import util
+import numpy as np
 
 class StageTemplate(Parameterized, Plugin):
 	_name = "None"
@@ -22,10 +23,11 @@ class StageTemplate(Parameterized, Plugin):
 	
 
 	def con(self):
-		pass
+		if self._con():
+			self.connectStatus.setValue(True)
 
 	def dis(self):
-		pass
+		self.connectStatus.setValue(False)
 
 
 	def getStatus(self):
@@ -41,7 +43,7 @@ class StageTemplate(Parameterized, Plugin):
 		"""this is only to quiet a potentially noisy RF"""
 		raise AttributeError("must implement")
 	
-	def disableSageMotors(self):
+	def disableStageMotors(self):
 		"""this is only to quiet a potentially noisy RF"""
 		raise AttributeError("must implement")
 
@@ -61,11 +63,11 @@ class StageTemplate(Parameterized, Plugin):
 		self._scanpathiter = self._zScanPath()
 
 	def scanNext(self):
-		if _scanpathiter != None:
+		if self._scanpathiter != None:
 			return self._scanpathiter.next()
 		else:
 			raise ValueError("no scan iterator")
 
 	def scanComplete(self):
-		_scanpathiter = None
+		self._scanpathiter = None
 		return self._scandone

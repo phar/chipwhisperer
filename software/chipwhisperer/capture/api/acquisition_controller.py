@@ -27,191 +27,203 @@ import time
 import copy
 from chipwhisperer.common.utils import util
 from datetime import datetime, date, time
-#from chipwhisperer.common.api.CWCoreAPI import CWCoreAPI
+
 
 class AcquisitionController:
+	#	def __init__(self,setid, prefix, scope=None, glitcher=None, stage=None, target=None, auxList=None, keyTextPattern=None, format=None):
 
-    def __init__(self, scope=None, glitcher=None, stage=None, target=None, auxList=None, keyTextPattern=None, format=None):
-        self.sigTraceDone = util.Signal()
-        self.sigNewTextResponse = util.Signal()
-        self.sigPreArm = util.Signal()
-        self.currentTrace = 0
-        self.maxtraces = 1
+	def __init__(self,setid, prefix, api):
+		self.sigTraceDone = util.Signal()
+		self.sigNewTextResponse = util.Signal()
+		self.sigPreArm = util.Signal()
+		self.currentTrace = 0
+		self.maxtraces = 1
 
-        self.key = [0]
-        self.textin = [0]
-        self.textout = [0]
-
-        self.format = format
-        self.target = target
-        self.scope = scope
-        self.glitcher = glitcher
-        self.stage = stage
-        self.auxList = auxList
-        self.keyTextPattern = keyTextPattern
-        self.writer = None
+		self.api = api
+		self.attackvars = {"startdate":datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')}
+		self.setid = setid
+		self.prefix = prefix
+		self.target = self.api.getTarget()
+		self.format = self.api.getTraceFormat()
+		self.scope = self.api.getScope()
+		self.glitcher = self.api.getGlitcher()
+		self.stage = self.api.getStage()
+		self.auxList = self.api._auxList
+		self.keyTextPattern = self.api.getAcqPattern()
+		self.writer = None
 		
-        if target != None:
-            self.keyTextPattern.setTarget(target)
-	
-        if self.keyTextPattern != None:
-            self.keyTextPattern.initPair()
+		if self.target != None:
+			self.keyTextPattern.setTarget(target)
 
-        if self.auxList is not None:
-            for aux in auxList:
-                if aux:
-                    aux.captureInit()
+		if self.keyTextPattern != None:
+			self.attackvars.update(self.keyTextPattern.initAttackVars().copy())
 
-
-    def SetupNewTrace(self):
-        """Return a new trace object for the specified format."""
-        if self.format is None:
-            raise Warning("No trace format selected.")
-        self.writer = copy.copy(self.format)
-        self.writer.clear()
-        starttime = datetime.now()
-        self.writerprefix = starttime.strftime('%Y.%m.%d-%H.%M.%S') + "_"
-			#        self.writer.config.setConfigFilename(CWCoreAPI.getInstance().project().datadirectory + "traces/config_" + prefix + ".cfg")
-        self.writer.config.setAttr("prefix", self.writerprefix)
-        self.writer.config.setAttr("date", starttime.strftime('%Y-%m-%d %H:%M:%S'))
+		if self.auxList is not None:
+			for aux in self.auxList:
+				if aux:
+					aux.captureInit()
 
 
-    def targetDoTrace(self):
-        if self.target is None or self.target.getName() == "None":
-            return []
+	def SetupNewTrace(self):
+		"""Return a new trace object for the specified format."""
+		if self.format is None:
+			raise Warning("No trace format selected.")
+		self.writer = copy.copy(self.format)
+		self.writer.clear()
+		starttime = datetime.now()
+		self.writer.config.setConfigFilename(self.api.getInstance().project().datadirectory + "traces/config_" + self.prefix + ".cfg") #fixme, I dont know what this does
+		self.writer.config.setAttr("prefix", self.prefix)
+		self.writer.config.setAttr("date", starttime.strftime('%Y-%m-%d %H:%M:%S'))
 
-        self.target.go()
-        timeout = 50
-        while self.target.isDone() is False and timeout:
-            timeout -= 1
-            time.sleep(0.01)
 
-        if timeout == 0:
-            logging.warning('Target timeout')
+	def targetDoTrace(self):
+		if self.target is None or self.target.getName() == "None":
+			return []
 
-        self.textout = self.target.readOutput()
-        try:
-            logging.debug("PlainText: " + ''.join(format(x, '02x') for x in self.textin))
-        except:
-            pass
+		self.target.go()
+		timeout = 50
+		while self.target.isDone() is False and timeout:
+			timeout -= 1
+			time.sleep(0.01)
 
-        try:
-            logging.debug("CipherText: " + ''.join(format(x, '02x') for x in self.textout))
-        except:
-            pass
+		if timeout == 0:
+			logging.warning('Target timeout')
 
-    def doSingleReading(self):
-        self.SetupNewTrace()
+		textout = self.target.readOutput()
+		
+		try:
+			logging.debug("PlainText: " + ''.join(format(x, '02x') for x in self.attackvars["textin"]))
+		except:
+			pass
+
+		try:
+			logging.debug("CipherText: " + ''.join(format(x, '02x') for x in self.attackvars["textout"]))
+		except:
+			pass
 			
-        # Set mode
-        if self.auxList:
-            for aux in self.auxList:
-                if aux:
-                    self.sigPreArm.emit()
-                    aux.traceArm()
+		return textout
 
-        if self.target:
-            self.target.reinit()
+	def doSingleReading(self):
+		self.SetupNewTrace()
+			
+		# Set mode
+		if self.auxList:
+			for aux in self.auxList:
+				if aux:
+					self.sigPreArm.emit()
+					aux.traceArm()
 
-        if self.stage:
-            self.stage.enableStageMotors()
-            (nx,ny) = self.stage.scanNext()
-            self.stage.setCurrentCoord((nx,ny))
-            stage.stageMovementLatencyPause()
-            self.stage.disableStageMotors()
-            (nx,ny) = stage.getCurrentCoord() #some stages may differ somewhat from the requested position
+		if self.target:
+			self.target.reinit()
 
-        if self.scope:
-            self.sigPreArm.emit()
-            self.scope.arm()
+		if self.stage:
+			self.stage.enableStageMotors()
+			(nx,ny) = self.stage.scanNext()
+			self.stage.setCurrentCoord((nx,ny))
+			self.stage.stageMovementLatencyPause()
+			self.stage.disableStageMotors()
+			(nx,ny) = self.stage.getCurrentCoord() #some stages may differ somewhat from the requested position
+			self.attackvars["x"] = nx
+			self.attackvars["y"] = ny
 
-        if self.auxList:
-            for aux in self.auxList:
-                if aux:
-                    aux.traceArmPost()
+		if self.scope:
+			self.sigPreArm.emit()
+			self.scope.arm()
 
-        if self.target:
-            # Get key / plaintext now
-            self.key, self.textin = self.keyTextPattern.newPair()
+		if self.auxList:
+			for aux in self.auxList:
+				if aux:
+					aux.traceArmPost()
 
-            self.target.setModeEncrypt()
-            self.target.loadEncryptionKey(self.key)
-            self.target.loadInput(self.textin)
-            # Load input, start encryption, get output
-            self.targetDoTrace()
-            self.sigNewTextResponse.emit(self.key, self.textin, self.textout, self.target.getExpected())
+		if self.target:
+			# Get key / plaintext now
+			self.attackvars.update(self.keyTextPattern.nextAttackVars().copy())
 
-        # Get ADC reading
-        if self.scope:
-            try:
-                ret = self.scope.capture()
-                if ret:
-                    logging.debug('Timeout happened during acquisition.')
-                return not ret
-            except IOError as e:
-                logging.error('IOError: %s' % str(e))
-                return False
+			self.target.setModeEncrypt()
+			self.target.loadEncryptionKey(self.attackvars["key"])
+			self.target.loadInput(self.attackvars["textin"])
+			# Load input, start encryption, get output
+			self.attackvars["textout"] = self.targetDoTrace() #does this generate textout?
 
-        if self.auxList:
-            for aux in self.auxList:
-                if aux:
-                    aux.traceDone()
-        return True
+			self.sigNewTextResponse.emit(self.attackvars, self.target.getExpected())
 
-    def setMaxtraces(self, maxtraces):
-        self.maxtraces = maxtraces
+		# Get ADC reading
+		if self.scope:
+			try:
+				ret = self.scope.capture()
+				if ret:
+					logging.debug('Timeout happened during acquisition.')
+				return not ret
+			except IOError as e:
+				logging.error('IOError: %s' % str(e))
+				return False
 
-    def doReadings(self, channelNumbers=None, tracesDestination=None, progressBar=None):
-        if channelNumbers is None:
-            channelNumbers = [0]
+		if self.auxList:
+			for aux in self.auxList:
+				if aux:
+					aux.traceDone()
+		return True
 
-        self.keyTextPattern.initPair()
+	def setMaxtraces(self, maxtraces):
+		self.maxtraces = maxtraces
 
-        if self.writer:
-            self.writer.prepareDisk()
+	def doReadings(self, channelNumbers=None, tracesDestination=None, progressBar=None):
+		if channelNumbers is None:
+			channelNumbers = [0]
 
-        if self.auxList:
-            for aux in self.auxList:
-                if aux:
-                    self.sigPreArm.emit()
-                    aux.traceArm()
+		if self.keyTextPattern:
+			self.keyTextPattern.initAttackVars()
 
-        if self.target:
-            self.target.init()
+		if self.writer:
+			self.writer.prepareDisk()
 
-        if self.stage:
-            self.stage.newScan()
+		if self.auxList:
+			for aux in self.auxList:
+				if aux:
+					self.sigPreArm.emit()
+					aux.traceArm()
 
-        self.currentTrace = 0
-        while self.currentTrace < self.maxtraces:
-            if self.doSingleReading():
-                try:
-                    if self.writer:
-                        self.writer.setKnownKey(self.key)
-                        for channelNum in channelNumbers:
-                            self.writer.addTrace(self.scope.channels[channelNum].getTrace(), self.textin, self.textout, self.key, channelNum=channelNum)
-                except ValueError as e:
-                    logging.warning('Exception caught in adding trace %d, trace skipped.' % self.currentTrace)
-                    logging.debug(str(e))
+		if self.target:
+			self.target.init()
+
+		if self.stage:
+			self.stage.newScan()
+
+		self.currentTrace = 0
+		while self.currentTrace < self.maxtraces:
+			if self.doSingleReading():
+				try:
+					if self.writer:
+						if "key" in self.attackvars:
+							self.writer.setKnownKey(self.attackvars["key"])
+						for channelNum in channelNumbers:
+							if self.scope != None:
+								trace = self.scope.channels[channelNum].getTrace()
+							else:
+								trace = [0]
+							self.writer.addTrace(trace, self.attackvars, channelNum=channelNum)
+				except ValueError as e:
+					logging.warning('Exception caught in adding trace %d, trace skipped.' % self.currentTrace)
+					logging.debug(str(e))
 				
-                progressBar.updateStatus(i*setSize + self.currentTrace + 1, (i, self.currentTrace))
-                self.sigTraceDone.emit()
-                self.currentTrace += 1
-            else:
-                util.updateUI()  # Check if it was aborted
+				self.sigTraceDone.emit()
+				self.currentTrace += 1
+				progressBar.updateStatus(self.setid*self.maxtraces + self.currentTrace, (self.setid, self.currentTrace))
+			else:
+				util.updateUI()  # Check if it was aborted
 
-            if progressBar is not None:
-                if progressBar.wasAborted():
-                    break
+			if progressBar is not None:
+				if progressBar.wasAborted():
+					break
 
-        if self.auxList:
-            for aux in self.auxList:
-                if aux:
-                    aux.captureComplete()
+		if self.auxList:
+			for aux in self.auxList:
+				if aux:
+					aux.captureComplete()
 
-        if self.writer and self.writer.numTraces() > 0:
-            # Don't clear trace as we re-use the buffer
-            self.writer.config.setAttr("scopeSampleRate", self.scope.channels[channelNumbers[0]].getSampleRate())
-            self.writer.closeAll(clearTrace=False)
-            if tracesDestination:
-                tracesDestination.appendSegment(self.writer)
+		if self.writer and self.writer.numTraces() > 0:
+			# Don't clear trace as we re-use the buffer
+			self.writer.config.setAttr("scopeSampleRate", self.scope.channels[channelNumbers[0]].getSampleRate())
+			self.writer.closeAll(clearTrace=False)
+			if tracesDestination:
+				tracesDestination.appendSegment(self.writer)

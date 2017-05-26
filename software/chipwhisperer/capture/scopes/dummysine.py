@@ -7,9 +7,10 @@ import numpy as np
 from chipwhisperer.common.utils import util, pluginmanager
 from chipwhisperer.common.utils.parameter import Parameterized, Parameter, setupSetParam
 from chipwhisperer.common.utils.tracesource import TraceSource
+from scipy import signal
 
 class DummyScopeInterface_SineWave(ScopeTemplate,Plugin):
-	_name = "Sine Wave"
+	_name = "Waveform Generator"
 
 	def __init__(self):
 		super(self.__class__, self).__init__()
@@ -18,10 +19,10 @@ class DummyScopeInterface_SineWave(ScopeTemplate,Plugin):
 		self.SampSs = 42000
 		self.YOffset = 0
 		self.XOffset = 0
-		self._channels = {"Sine":0,"Square":1}
+		self._channels = ["Sine","Square"]
 		self._triggers = ["None"]
 		self._armed = 0
-		self._channel = self._channels['Sine']
+		self._channel = self._channels[0]
 		self.connected = 0
 		self._samplecount = self.SampSs/8.0
 		self._frequency = 2600
@@ -72,15 +73,15 @@ class DummyScopeInterface_SineWave(ScopeTemplate,Plugin):
 		self.connected = 0
 		return True
 	
-	
 	def capture(self):
-		#we're waiting on the trigger here
-
 		x = np.arange(self._samplecount) # the points on the x axis for plotting
-		y = np.sin(2 * np.pi * self._frequency * x / self.SampSs)
+		if self._channel == "Sine":
+			self.datapoints = np.sin(2 * np.pi * self._frequency * x / self.SampSs)
+		elif self._channel == "Square":
+			self.datapoints = signal.square(2 * np.pi * self._frequency * x / self.SampSs)
+		else:
+			self.datapoints = [0]
 
-		self.datapoints = y
-		#		logging.info(self.datapoints)
-		self.dataUpdated.emit(self._channel , self.datapoints, 0, self.SampSs)
+		self.dataUpdated.emit(0, self.datapoints, 0, self.SampSs)
 		self.armed = 0
 		return False

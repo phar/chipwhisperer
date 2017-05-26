@@ -33,7 +33,7 @@ class TraceContainerNative(TraceContainer):
     def copyTo(self, srcTraces=None):
         self.numTrace = srcTraces.numTraces()
         self.numPoint = srcTraces.numPoints()
-        self.knownkey = srcTraces.knownkey
+        self.setKnownKey(srcTraces.getKnownKey())
 
         self.textins = np.zeros([self.numTrace, 16], dtype=np.uint8)
         for n in range(0, self.numTrace):
@@ -69,9 +69,9 @@ class TraceContainerNative(TraceContainer):
         self.textouts = np.load(directory + "/%stextout.npy" % prefix)
 
         try:
-            self.knownkey = np.load(directory + "/%sknownkey.npy" % prefix)
+            self.setKnownKey(np.load(directory + "/%sknownkey.npy" % prefix))
         except IOError:
-            self.knownkey = None
+            self.setKnownKey(None)
 
         # OK if this fails
         try:
@@ -88,7 +88,6 @@ class TraceContainerNative(TraceContainer):
         self.traces = None
         self.textins = None
         self.textouts = None
-        self.knownkey = None
         self.keylist = None
         self._isloaded = False
 
@@ -118,7 +117,7 @@ class TraceContainerNative(TraceContainer):
         np.save(directory + "/%stextin.npy" % prefix, self.textins)
         np.save(directory + "/%stextout.npy" % prefix, self.textouts)
         np.save(directory + "/%skeylist.npy" % prefix, self.keylist)
-        np.save(directory + "/%sknownkey.npy" % prefix, self.knownkey)
+        np.save(directory + "/%sknownkey.npy" % prefix, self.getKnownKey())
         self.setDirty(False)
 
     def closeAll(self, clearTrace=True, clearText=True, clearKeys=True):
@@ -134,4 +133,4 @@ class TraceContainerNative(TraceContainer):
 
         if clearKeys:
             self.keylist = None
-            self.knownkey = None
+            self.setKnownKey(None)

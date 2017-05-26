@@ -99,10 +99,11 @@ class AcqKeyTextPattern_Basic(AcqKeyTextPattern_Base):
 
             self.inittext = textStr
 
-    def initPair(self):
-        pass
 
-    def newPair(self):
+    def initAttackVars(self):
+        return {"key":None, "textin":None, "textout":None}
+	
+    def nextAttackVars(self):
         if self._fixedKey is False:
             self._key = bytearray(self.keyLen())
             for i in range(0, self.keyLen()):
@@ -116,8 +117,28 @@ class AcqKeyTextPattern_Basic(AcqKeyTextPattern_Base):
         # Check pair works with target
         self.validateKey()
         self.validateText()
+        return {"key":self._key,"textin": self._textin}
 
-        return self._key, self._textin
+
+#    def initPair(self):
+#        pass
+
+#    def newPair(self):
+#        if self._fixedKey is False:
+#            self._key = bytearray(self.keyLen())
+#            for i in range(0, self.keyLen()):
+#                self._key[i] = random.randint(0, 255)
+#
+#        if self._fixedPlain is False:
+#            self._textin = bytearray(self.textLen())
+#            for i in range(0, self.textLen()):
+#                self._textin[i] = random.randint(0, 255)
+#
+#        # Check pair works with target
+#        self.validateKey()
+#        self.validateText()
+#
+#        return self._key, self._textin
 
     def __str__(self):
         key = "Key=" + self.findParam("Key").getValueKey()

@@ -79,10 +79,10 @@ class AcqKeyTextPattern_DPA(AcqKeyTextPattern_Base):
 
             self.initmask = maskStr
 
-    def initPair(self):
+    def initAttackVars(self):
         pass
 
-    def newPair(self):
+    def nextAttackVars(self):
         randDPA = random.randint(0, 1)
         if randDPA == 0:
             DPAByte = 0
@@ -97,4 +97,4 @@ class AcqKeyTextPattern_DPA(AcqKeyTextPattern_Base):
         self.validateKey()
         self.validateText()
 
-        return self._key, self._textin
+        return {"key":self._key, "textin":self._textin}

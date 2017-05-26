@@ -20,6 +20,16 @@ Stuck? If you need a hand, there are a few places you can ask for help:
 * The [NewAE Forum](https://www.newae.com/forum/) is full of helpful people that can point you in the right direction
 * If you find a bug, let us know through the [issue tracker](https://github.com/newaetech/chipwhisperer/issues)
 
+
+## Things you might need to run plugins:
+* pyqtgraph
+* matplotlib
+* pyserial
+* NI-VISA
+* pyvisa (visa python bindings)
+* sqlite3
+* sqlite3 (python bindings)
+
 ---
 
 ChipWhisperer is a trademark of NewAE Technology Inc., registered in the US and Europe.

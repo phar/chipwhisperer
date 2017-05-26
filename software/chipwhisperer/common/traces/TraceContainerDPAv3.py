@@ -75,26 +75,28 @@ class TraceContainerDPAv3(TraceContainer):
     def numPoints(self):
         return self._numPoints
         
-    def addTrace(self, wave, textin, textout, key=None, dtype=np.double):
-        self.wavelen = len(wave)
+    def addTrace(self, trace, attackvars, dtype=np.double,channelNum=None):
+        self.wavelen = len(trace)
         self._numTraces = self._numTraces + 1
-        self._numPoints = len(wave)
+        self._numPoints = len(trace)
 
-        for i in textin:
-            self.inf.write('%2X '%i)
-        self.inf.write('\n')
+        if "textin" in attackvars:
+            for i in attackvars["textin"]:
+                self.inf.write('%2X '%i)
+            self.inf.write('\n')
 
-        for i in textout:
-            self.outf.write('%2X '%i)
-        self.outf.write('\n')
+        if "textout" in attackvars:
+            for i in attackvars["textout"]:
+                self.outf.write('%2X '%i)
+            self.outf.write('\n')
 
-        for i in wave:
+        for i in trace:
             iint = i * float(2**16)
             self.wavef.write('%d '%int(iint))
         self.wavef.write('\n')
 
-        if key:
-            for i in key:
+        if "key" in attackvars:
+            for i in attackvars["key"]:
                 self.keyf.write('%2X '%i)
             self.keyf.write('\n')
         

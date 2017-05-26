@@ -55,6 +55,7 @@ class CWCaptureGUI(CWMainGUI):
     def addSettingsDocks(self):
         self.settingsGeneralDock = self.addSettings(self.api.params)
         self.settingsResultsDock = self.addSettings(ResultsBase.getClassParameter())
+        self.settingsStageDock = self.addSettings(self.api.stageParam)
         self.settingsScopeDock = self.addSettings(self.api.scopeParam)
         self.settingsTargetDock = self.addSettings(self.api.targetParam)
         self.settingsGlitchDock = self.addSettings(self.api.glitchParam)
@@ -87,6 +88,11 @@ class CWCaptureGUI(CWMainGUI):
             self.glitcherStatus.setDefaultAction(self.glitcherStatusActionCon)
         else:
             self.glitcherStatus.setDefaultAction(self.glitcherStatusActionDis)
+
+        if self.api.getStage() and self.api.getStage().getStatus():
+            self.stageStatus.setDefaultAction(self.stageStatusActionCon)
+        else:
+            self.stageStatus.setDefaultAction(self.stageStatusActionDis)
 
 #        if self.api.getScope() and self.api.getTarget() and (self.scopeStatus.defaultAction() == self.scopeStatusActionCon or self.targetStatus.defaultAction() == self.targetStatusActionCon):
 #            self.captureStatus.setDefaultAction(self.captureStatusActionCon)
@@ -145,7 +151,7 @@ class CWCaptureGUI(CWMainGUI):
         self.stageStatus = QToolButton()
         self.stageStatusActionDis = QAction(QIcon(':/images/status_disconnected.png'), 'Target: Disconnected', self, triggered=self.doConDisStage)
         self.stageStatusActionCon = QAction(QIcon(':/images/status_connected.png'), 'Target: Connected', self, triggered=self.doConDisStage)
-        self.stageStatus.setDefaultAction(self.glitcherStatusActionDis)
+        self.stageStatus.setDefaultAction(self.stageStatusActionDis)
 
 
 
@@ -168,7 +174,7 @@ class CWCaptureGUI(CWMainGUI):
 
     def doConDisScope(self):
         if self.api.getScope() == None:
-            self.window.SimpleUserInfoDialog("No Scope Selected","In order to connect to the scope, you need to select one in the general settings tab")
+            raise Warning("No Scope Selected,In order to connect to the scope, you need to select one in the general settings tab")
 
         if self.scopeStatus.defaultAction() == self.scopeStatusActionDis:
             if self.api.connectScope():
@@ -178,6 +184,9 @@ class CWCaptureGUI(CWMainGUI):
             logging.info("Scope Disconnected")
 
     def doConDisTarget(self):
+        if self.api.getTarget() == None:
+            raise Warning("No Target Selected,In order to connect to the target, you need to select one in the general settings tab")
+
         if self.targetStatus.defaultAction() == self.targetStatusActionDis:
             if self.api.connectTarget():
                 logging.info("Target Connected")
@@ -186,6 +195,9 @@ class CWCaptureGUI(CWMainGUI):
             logging.info("Target Disconnected")
 
     def doConDisGlitcher(self):
+        if self.api.getGlitcher() == None:
+            raise Warning("No Glitcher Selected,In order to connect to the glitcher, you need to select one in the general settings tab")
+				
         if self.glitcherStatus.defaultAction() == self.glitcherStatusActionDis:
             if self.api.connectGlitcher():
                 logging.info("Glitcher Connected")
@@ -194,6 +206,9 @@ class CWCaptureGUI(CWMainGUI):
             logging.info("Glitcher Disconnected")
 
     def doConDisStage(self):
+        if self.api.getStage() == None:
+            raise Warning("No Stage Selected,In order to connect to the Stage, you need to select one in the general settings tab")
+		
         if self.stageStatus.defaultAction() == self.stageStatusActionDis:
             if self.api.connectStage():
                 logging.info("Stage Connected")
