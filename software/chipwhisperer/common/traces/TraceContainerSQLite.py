@@ -9,12 +9,10 @@ import os
 from chipwhisperer.common.api.CWCoreAPI import CWCoreAPI
 
 try:
-    import sqlite3 as sql
+	import sqlite3 as sql
 except ImportError, e:
-    # This isn't really needed, no need to bother users
-    # print "umysql required: https://pypi.python.org/pypi/umysql"
-    raise ImportError(e)
-
+	print "sqlite3 is required if you would like to use sqlite trace containers"
+	raise ImportError(e)
 
 class TraceContainerSQLite(TraceContainer):
 	_name = "SQLite"
@@ -26,8 +24,6 @@ class TraceContainerSQLite(TraceContainer):
 		self.lastId = 0
 		self.openMode = openMode
 		self.fmt = None
-		self.con()
-		self.prepareDB()
 			#	self.getParams().addChildren([{'name':'SQLite Configuration', 'type':'group', 'children':[
 	#                       {'name':'Table Name', 'key':'tableName', 'type':'str', 'value':'CWTable1', 'readonly':True}
 	#			  ]}])
@@ -49,15 +45,16 @@ class TraceContainerSQLite(TraceContainer):
 		raise ValueError("Invalid mode: %s"%mode)
 
 	def prepareDisk(self):
-		pass
+		self.con()
 	
 	def prepareDB(self):
 		self.db.execute("create table IF NOT EXISTS cwtraces(trace_id integer PRIMARY KEY AUTOINCREMENT,trace   text, trace_data text,  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP);" )
 
 	def con(self):
-		if self.db is not None:
-			self.db.close()
-		self.db = sqlite3.connect(os.path.join(self.api.project().datadirectory,"chipwhisperer.db")) #fixme.. in project directory!
+		self.dbfile = os.path.dirname(self.config.configFilename()) + ".".join(os.path.basename(self.config.configFilename()).split("_")[:-1])+".sqlite3"
+		logging.info("waveform database %s" % self.dbfile)
+		self.db = sqlite3.connect(self.dbfile) #fixme.. in project directory!
+		self.prepareDB()
 		self.db.execute("PRAGMA foreign_keys = ON;")
 
 		cx = self.db.cursor()
@@ -65,19 +62,6 @@ class TraceContainerSQLite(TraceContainer):
 		result = cx.fetchone()
 		logging.info('SQLite Version: %s' % result)
 
-
-	def _getTableName(self):
-		return self.getParams.findParam('tableNameList').getValue()
-
-	#    def listAllTables(self):
-	#        self.con()
-	#        database = self.getParams.findParam('database').getValue()
-	#        results = self.db.query("SHOW TABLES IN %s"%database)
-	#        tables = []
-	#        for r in results.rows:
-	#            tables.append(r[0])
-	#        self.getParams.findParam('tableNameList').setLimits(tables)
-	#
 
 	def updatePointsTraces(self):
 		res = self.db.query("SELECT COUNT(*) FROM cwtraces" )
@@ -87,15 +71,15 @@ class TraceContainerSQLite(TraceContainer):
 		self._numPoints = self.formatWave(wav, read=True).shape[0]
 
 	def updateConfigData(self):
-		self.con()
-		self.tableName = self.getParams.findParam('tableName').getValue()
-		res = self.db.query("SELECT COUNT(*) FROM cwtraces")
-		self._numTraces = res.rows[0][0]
-		self.config.setAttr('numTraces', self._numTraces)
+		if self.db != None:
+			self.tableName = self.getParams.findParam('tableName').getValue()
+			res = self.db.query("SELECT COUNT(*) FROM cwtraces")
+			self._numTraces = res.rows[0][0]
+			self.config.setAttr('numTraces', self._numTraces)
 
-		wav = self.db.query("SELECT Wave FROM cwtraces  order by trace_id  LIMIT 1 OFFSET ?",(0))
-		self._numPoints = self.formatWave(wav, read=True).shape[0]
-		self.config.setAttr('numPoints', self._numPoints)
+			wav = self.db.query("SELECT Wave FROM cwtraces  order by trace_id  LIMIT 1 OFFSET ?",(0))
+			self._numPoints = self.formatWave(wav, read=True).shape[0]
+			self.config.setAttr('numPoints', self._numPoints)
 
 	def numTraces(self, update=False):
 		if update:

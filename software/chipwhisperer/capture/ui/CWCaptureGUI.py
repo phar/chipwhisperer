@@ -22,8 +22,12 @@
 #    You should have received a copy of the GNU General Public License
 #    along with chipwhisperer.  If not, see <http://www.gnu.org/licenses/>.
 #=================================================
-
+import sip
+sip.setapi('QVariant',2)
+from PyQt4.QtGui import *
+from PyQt4.QtCore import *
 from chipwhisperer.capture.ui.EncryptionStatusMonitor import EncryptionStatusMonitor
+from chipwhisperer.capture.ui.StageExplorerMonitor import StageExplorerMonitor
 from chipwhisperer.capture.ui.GlitchExplorerDialog import GlitchExplorerDialog as GlitchExplorerDialog
 from chipwhisperer.capture.utils.SerialTerminalDialog import SerialTerminalDialog as SerialTerminalDialog
 from chipwhisperer.common.api.CWCoreAPI import CWCoreAPI
@@ -34,7 +38,6 @@ from chipwhisperer.common.ui.ValidationDialog import ValidationDialog
 from chipwhisperer.common.utils import pluginmanager
 from chipwhisperer.common.utils.parameter import Parameter
 from chipwhisperer.common.utils.tracesource import ActiveTraceObserver
-
 
 class CWCaptureGUI(CWMainGUI):
     def __init__(self, api):
@@ -111,11 +114,18 @@ class CWCaptureGUI(CWMainGUI):
                                         triggered=self.glitchMonitor.show)
         self.toolMenu.addAction(self.glitchMonitorAct)
 
+
         self.encryptionStatusMonitor = EncryptionStatusMonitor(self)
         self.api.sigNewTextResponse.connect(self.encryptionStatusMonitor.newData)
         self.encryptionStatusMonitorAct = QAction('Encryption Status Monitor', self, statusTip='Encryption Status Monitor',
                                         triggered=self.encryptionStatusMonitor.show)
         self.toolMenu.addAction(self.encryptionStatusMonitorAct)
+        self.stageExplorerMonitor = StageExplorerMonitor(self)
+
+        self.stageExplorerMonitorAct = QAction('Stage Explorer', self, statusTip='Stage Explorer',
+												  triggered=self.stageExplorerMonitor.show)
+        self.toolMenu.addAction(self.stageExplorerMonitorAct)
+
 
     def addToolbarItems(self, toolbar):
         # Capture
@@ -143,14 +153,14 @@ class CWCaptureGUI(CWMainGUI):
 
         # Glitcher
         self.glitcherStatus = QToolButton()
-        self.glitcherStatusActionDis = QAction(QIcon(':/images/status_disconnected.png'), 'Target: Disconnected', self, triggered=self.doConDisGlitcher)
-        self.glitcherStatusActionCon = QAction(QIcon(':/images/status_connected.png'), 'Target: Connected', self, triggered=self.doConDisGlitcher)
+        self.glitcherStatusActionDis = QAction(QIcon(':/images/status_disconnected.png'), 'Glitcher: Disconnected', self, triggered=self.doConDisGlitcher)
+        self.glitcherStatusActionCon = QAction(QIcon(':/images/status_connected.png'), 'Glitcher: Connected', self, triggered=self.doConDisGlitcher)
         self.glitcherStatus.setDefaultAction(self.glitcherStatusActionDis)
 
         # Stage
         self.stageStatus = QToolButton()
-        self.stageStatusActionDis = QAction(QIcon(':/images/status_disconnected.png'), 'Target: Disconnected', self, triggered=self.doConDisStage)
-        self.stageStatusActionCon = QAction(QIcon(':/images/status_connected.png'), 'Target: Connected', self, triggered=self.doConDisStage)
+        self.stageStatusActionDis = QAction(QIcon(':/images/status_disconnected.png'), 'Stage: Disconnected', self, triggered=self.doConDisStage)
+        self.stageStatusActionCon = QAction(QIcon(':/images/status_connected.png'), 'Stage: Connected', self, triggered=self.doConDisStage)
         self.stageStatus.setDefaultAction(self.stageStatusActionDis)
 
 

@@ -29,8 +29,13 @@ from .base import ScopeTemplate
 from chipwhisperer.common.utils import pluginmanager
 from chipwhisperer.common.utils.parameter import setupSetParam
 from chipwhisperer.common.utils.pluginmanager import Plugin
-import visa
-import logging
+import loggin
+
+try:
+	import visa
+except ImportError, e:
+	print "NI-Visa and Pyvisa are required for VISA instrument support"
+	raise ImportError(e)
 
 class VisaScopeInterface(ScopeTemplate, Plugin):
 	_name = "VISA Scope"

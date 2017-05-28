@@ -135,12 +135,12 @@ class CWCoreAPI(Parameterized):
 
 
     def getStage(self):
-        """Return the current glitcher module object."""
+        """Return the current stage module object."""
         return self._stage
 	
     @setupSetParam("Stage Module")
     def setStage(self, driver):
-        """Set the current glitcher module object."""
+        """Set the current stage module object."""
         if self.getStage():
             self.getStage().dis()
 		
@@ -149,7 +149,6 @@ class CWCoreAPI(Parameterized):
             self.sigConfigurationChange.emit()
 		
         if self.getStage():
-            logging.info( dir(self.getStage()))
             self.getStage().connectStatus.connect(self.sigConnectStatus.emit)
 
     def getGlitcher(self):
@@ -291,7 +290,7 @@ class CWCoreAPI(Parameterized):
             return False
         return True
 
-    def disconnectScope(self):
+    def disconnectStage(self):
         """Disconnect the current stage"""
         self.getStage().dis()
 	

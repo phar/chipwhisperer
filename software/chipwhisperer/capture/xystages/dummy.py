@@ -17,16 +17,13 @@ class DummyStageTemplate(StageTemplate, Plugin):
 	def __init__(self):
 		self.getParams()
 		self.prefix = ""
-		StageTemplate.__init__(self)
 		self._x = 0
 		self._y = 0
+		StageTemplate.__init__(self)
 		self.params.addChildren([
-			{'name':'Current Position', 'key':'currpos', 'type':'range', 'get':self.getCurrentCoord, 'set':self.setCurrentCoord},
-			{'name':'Corner Position', 'key':'corner0', 'type':'range', 'get':self.getMinCoord, 'set':self.setMinCoord},
-			{'name':'Opposite Corner Position','key':'corner1', 'type':'range', 'get':self.getMaxCoord, 'set':self.setMaxCoord},
-			{'name':'Samples Per Axis', 'key':'axis_steps', 'type':'float', 'get':self.getAxisSteps, 'set':self.setAxisSteps},
-			{'name':'Stage Step Latency', 'key':'axis_delay', 'type':'float', 'get':self.getLatency, 'set':self.setLatency},
+								 #			{'name':'Current Position', 'key':'currpos', 'type':'range', 'get':self.getCurrentCoord, 'set':self.setCurrentCoord},
 		])
+
 
 	def getLatency(self):
 		return self._stepdelay
@@ -62,17 +59,14 @@ class DummyStageTemplate(StageTemplate, Plugin):
 	def enableStageMotors(self):
 		pass
 
-	def disableSageMotors(self):
+	def disableStageMotors(self):
 		pass
 	
 	def _con(self):
-		pass
+		return True
 	
 	def _dis(self):
-		pass
-
-	def getStatus(self):
-		pass
+		return True
 
 	def stageMovementLatencyPause(self):
 		time.sleep(self._stepdelay)

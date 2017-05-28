@@ -173,7 +173,10 @@ class TraceContainer(Parameterized, Plugin):
 	#        if hasattr(self, 'keylist'):
 	#            if self.keylist is not None:
 	#                return self.keylist[n]
-		return self.attackvars['knownkey']
+		if 'knownkey' in self.attackvars:
+			return self.attackvars['knownkey']
+		else:
+			return None
 
 	def getAuxDataConfig(self, newmodule):
 		"""

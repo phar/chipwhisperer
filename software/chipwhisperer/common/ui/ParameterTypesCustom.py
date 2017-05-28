@@ -32,7 +32,10 @@
 import os
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
+import sip
+sip.setapi('QVariant',2)
+from PyQt4 import QtGui
+from PyQt4 import QtCore
 from pyqtgraph.parametertree.Parameter import registerParameterType
 from pyqtgraph.parametertree.ParameterItem import ParameterItem
 from pyqtgraph.parametertree.parameterTypes import WidgetParameterItem, EventProxy, ListParameterItem, Parameter, ActionParameterItem, TextParameterItem, GroupParameterItem, ListParameter

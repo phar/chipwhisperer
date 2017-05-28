@@ -30,8 +30,13 @@ import pickle
 import random
 import sys
 from datetime import datetime
-from PySide.QtCore import *
-from PySide.QtGui import *
+#from PySide.QtCore import *
+#from PySide.QtGui import *
+import sip
+sip.setapi('QVariant',2)
+
+from PyQt4.QtGui import *
+from PyQt4.QtCore import *
 from pyqtgraph.parametertree import ParameterTree
 import chipwhisperer.common.utils.qt_tweaks as QtFixes
 from chipwhisperer.common.utils.parameter import Parameterized, Parameter

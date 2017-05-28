@@ -25,9 +25,10 @@
 #    along with chipwhisperer.  If not, see <http://www.gnu.org/licenses/>.
 #=================================================
 
-import PySide.QtCore as qtc
-import PySide.QtGui as qtg
-
+#import PySide.QtCore as qtc
+#import PySide.QtGui as qtg
+import PyQt4.QtCore as qtc
+import PyQt4.QtGui as qtg
 
 class QLineEdit(qtg.QLineEdit):
     """Fixes a bug with Mac OS where the Frame would flicker the second time you call show()"""

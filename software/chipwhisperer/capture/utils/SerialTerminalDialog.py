@@ -24,8 +24,13 @@
 #=================================================
 
 import sys
-from PySide.QtCore import *
-from PySide.QtGui import *
+#from PySide.QtCore import *
+#from PySide.QtGui import *
+import sip
+sip.setapi('QVariant',2)
+
+from PyQt4.QtGui import *
+from PyQt4.QtCore import *
 import chipwhisperer.common.utils.qt_tweaks as QtFixes
 import logging
 

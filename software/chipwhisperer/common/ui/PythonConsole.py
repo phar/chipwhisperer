@@ -12,7 +12,10 @@ embedded in your GUI.
 
 import sys
 from code import InteractiveConsole as _InteractiveConsole
-from PySide import QtCore, QtGui
+#from PySide import QtCore, QtGui
+import sip
+sip.setapi('QVariant',2)
+from PyQt4 import QtGui,QtCore
 
 try:
     from cStringIO import StringIO

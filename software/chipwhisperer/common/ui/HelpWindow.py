@@ -6,10 +6,15 @@
 # This project is released under the Modified FreeBSD License. See LICENSE
 # file which should have came with this code.
 
-from PySide.QtGui import *
-from PySide.QtCore import *
+#from PySide.QtGui import *
+#from PySide.QtCore import *
+import sip
+sip.setapi('QVariant',2)
+from PyQt4.QtGui import *
+from PyQt4.QtCore import *
 import chipwhisperer.common.utils.qt_tweaks as QtFixes
-from PySide import QtWebKit
+#from PySide import QtWebKit
+from PyQt4 import QtWebKit
 try:
     from docutils import core, io
 except ImportError:

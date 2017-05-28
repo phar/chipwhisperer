@@ -20,24 +20,21 @@ class GCodeStageTemplate(StageTemplate, Plugin):
 		self._devpath = "/dev/tty.usbserial-AI03DR2E"
 		self._devbps = 250000
 		StageTemplate.__init__(self)
+		self._feedrate = 10
 
 		self.params.addChildren([
 			{'name':'Stage Device', 'key':'stagedev', 'type':'str', 'get':self.getStageDev, 'set':self.setStageDev},
 			{'name':'Stage Device Baud', 'key':'stagedevbps', 'type':'int', 'get':self.getStageDevBPS, 'set':self.setStageDevBPS},
-			{'name':'Current Position', 'key':'currpos', 'type':'range', 'get':self.getCurrentCoord, 'set':self.setCurrentCoord},
-			{'name':'Corner Position', 'key':'corner0', 'type':'range', 'get':self.getMinCoord, 'set':self.setMinCoord},
-			{'name':'Use Current Position','key':'setminact', 'type':'action','action':self.useCurrentAsMin},
-			{'name':'Opposite Corner Position','key':'corner1', 'type':'range', 'get':self.getMaxCoord, 'set':self.setMaxCoord},
-			{'name':'Use Current Position ','key':'setmaxact','type':'action','action':self.useCurrentAsMax},
-			{'name':'Samples Per Axis', 'key':'axis_steps', 'type':'float', 'get':self.getAxisSteps, 'set':self.setAxisSteps},
-			{'name':'Stage Step Latency', 'key':'axis_delay', 'type':'float', 'get':self.getLatency, 'set':self.setLatency},
+			{'name':'X-Y FeedRate', 'key':'feedrate', 'type':'int', 'get':self.getFeedRate, 'set':self.setFeedRate},
+								 #			{'name':'Current Position', 'key':'currpos', 'type':'range', 'get':self.getCurrentCoord, 'set':self.setCurrentCoord},
+
 		])
 
-	def getLatency(self):
-		return self._stepdelay
+	def getFeedRate(self):
+		return self._feedrate
 	
-	def setLatency(self, delay,  blockSignal=False):
-		self._stepdelay = delay
+	def setFeedRate(self, rate,  blockSignal=False):
+		self._feedrate = rate
 	
 	def getAxisSteps(self):
 		return self._axisSteps
@@ -71,15 +68,6 @@ class GCodeStageTemplate(StageTemplate, Plugin):
 	def setMaxCoord(self, mincoord,  blockSignal=False):
 		self._minCoord = mincoord
 
-	def useCurrentAsMin(self , something):
-		self.updateStagePos()
-		self._minCoord = self.getCurrentCoord()
-		self.findParam('corner0').setValue(self._currCoord)
-
-	def useCurrentAsMax(self, something):
-		self.updateStagePos()
-		self._maxCoord = self.getCurrentCoord()
-		self.findParam('corner1').setValue(self._currCoord)
 
 	def getCurrentCoord(self):
 		if self._dev == None:
@@ -90,42 +78,32 @@ class GCodeStageTemplate(StageTemplate, Plugin):
 	def updateStagePos(self):
 		self._dev.getPos()
 		self._currCoord = (self._dev.mmpos["X"],self._dev.mmpos["Y"])
-		self.findParam('currpos').setValue(self._currCoord)
 
 	def setCurrentCoord(self, coord,  blockSignal=False):
 		if self._dev == None:
 			return
 		else:
-			self._dev.gotoXYZ(coord[0],coord[1])
+			self._dev.gotoXYZ(coord[0],coord[1],f=self._feedrate)
 			self.getCurrentCoord()
-
 
 	def enableStageMotors(self):
 		if self._dev:
 			self._dev.command("M17")
 			self.updateStagePos()
 
-
 	def disableStageMotors(self):
 		if self._dev:
 			self._dev.command("M18")
 			self.updateStagePos()
 
-	def con(self):
-		if self._dev:
-			self._dev.close()
+	def _con(self):
 		self._dev = GCODE(self._devpath, self._devbps)
 		self.updateStagePos()
+		return True
 		
-	def dis(self):
+	def _dis(self):
 		if self._dev != None:
 			self._dev.close()
 		self._dev = None
+		return True
 
-	def getStatus(self):
-			pass
-
-	def stageMovementLatencyPause(self):
-		time.sleep(self._stepdelay)
-
-#return self.connectStatus.value()

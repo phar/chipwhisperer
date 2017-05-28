@@ -24,8 +24,10 @@
 
 __author__ = "Colin O'Flynn"
 
-from PySide.QtGui import *
-from PySide.QtCore import *
+#from PySide.QtGui import *
+#from PySide.QtCore import *
+from PyQt4.QtGui import *
+from PyQt4.QtCore import *
 from pyqtgraph.parametertree import ParameterTree
 import chipwhisperer.common.traces.TraceContainerTypes
 from chipwhisperer.common.traces._cfgfile import TraceContainerConfig
