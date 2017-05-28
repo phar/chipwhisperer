@@ -116,8 +116,10 @@ class ProgressBarText(object):
         self.printAll = value
 
 try:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
+    import sip
+    sip.setapi('QVariant',2)
+    from PyQt4.QtGui import *
+    from PyQt4.QtCore import *
     from ..utils import qt_tweaks
 
     class ProgressBarGUI(qt_tweaks.QDialog, ProgressBarText):

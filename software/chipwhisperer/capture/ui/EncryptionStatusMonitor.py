@@ -23,7 +23,6 @@
 #    along with chipwhisperer.  If not, see <http://www.gnu.org/licenses/>.
 #=================================================
 
-#from PySide.QtGui import *
 from PyQt4.QtGui import *
 import chipwhisperer.common.utils.qt_tweaks as QtFixes
 import binascii

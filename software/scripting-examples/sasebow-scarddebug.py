@@ -37,8 +37,10 @@ import time
 
 #Check for PySide
 try:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
+	import sip
+	sip.setapi('QVariant',2)
+	from PyQt4.QtGui import *
+	from PyQt4.QtCore import *
 except ImportError:
     print "ERROR: PySide is required for this program"
     sys.exit()

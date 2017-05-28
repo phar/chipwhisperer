@@ -25,7 +25,7 @@
 #=================================================
 
 from ._plotdata import AttackResultPlot
-from PySide.QtGui import *
+from PyQt4.QtGui import *
 from chipwhisperer.common.utils import util
 from chipwhisperer.common.utils.pluginmanager import Plugin
 

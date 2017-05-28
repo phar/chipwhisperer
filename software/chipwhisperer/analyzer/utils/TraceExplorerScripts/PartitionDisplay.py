@@ -28,8 +28,8 @@
 from functools import partial
 import numpy as np
 import copy
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 import chipwhisperer.common.utils.qt_tweaks as QtFixes
 import pyqtgraph as pg
 from chipwhisperer.analyzer.utils.Partition import Partition

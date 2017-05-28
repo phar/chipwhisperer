@@ -34,8 +34,8 @@
 import sys
 import sip
 sip.setapi('QVariant',2)
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt4.QtGui import *
+from PyQt4.QtCore import *
 import os.path
 os.environ["QT_API"] = "pyside"
 import matplotlib

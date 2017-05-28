@@ -41,8 +41,8 @@ import chipwhisperer.capture.ChipWhispererCapture as cwc
 
 #Check for PySide
 try:
-    from PySide.QtCore import *
-    from PySide.QtGui import *
+    from PyQt.QtCore import *
+    from PyQt.QtGui import *
 except ImportError:
     print "ERROR: PySide is required for this program"
     sys.exit()

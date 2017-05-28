@@ -61,7 +61,7 @@ class NormMeanStd(NormBase):
 
 
 try:
-    from PySide.QtGui import *
+    from PyQt4.QtGui import *
 
     class NormLinFunc(NormBase):
         """Normalize by two polynomial functions based on additional information"""

@@ -22,7 +22,6 @@
 #    You should have received a copy of the GNU General Public License
 #    along with chipwhisperer.  If not, see <http://www.gnu.org/licenses/>.
 
-#from PySide.QtGui import *
 import sip
 sip.setapi('QVariant',2)
 from PyQt4.QtGui import *

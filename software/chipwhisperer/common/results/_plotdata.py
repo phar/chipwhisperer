@@ -26,7 +26,10 @@
 from functools import partial
 import logging
 import numpy as np
-from PySide.QtGui import *
+import sip
+sip.setapi('QVariant',2)
+from PyQt4.QtGui import *
+from PyQt4.QtCore import *
 from chipwhisperer.analyzer.attacks._base import AttackObserver
 from .base import ResultsBase
 from chipwhisperer.common.ui.GraphWidget import GraphWidget

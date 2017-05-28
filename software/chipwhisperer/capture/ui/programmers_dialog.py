@@ -27,9 +27,9 @@
 import os.path
 import time
 from datetime import datetime
-from PySide.QtCore import *
-from PySide.QtGui import *
-from PySide.QtGui import QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QPlainTextEdit, QFileDialog
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+from PyQt4.QtGui import QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QPlainTextEdit, QFileDialog
 
 from chipwhisperer.common.ui.CWMainGUI import CWMainGUI
 from chipwhisperer.capture.api.programmers import AVRProgrammer, XMEGAProgrammer

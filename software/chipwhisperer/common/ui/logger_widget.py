@@ -1,4 +1,3 @@
-#from PySide.QtGui import *
 import sip
 sip.setapi('QVariant',2)
 

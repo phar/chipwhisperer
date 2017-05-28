@@ -30,8 +30,8 @@ import uuid
 import tempfile
 import os.path, time
 
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 
 from chipwhisperer.analyzer.utils.syntaxhighlighter import PythonHighlighter
 

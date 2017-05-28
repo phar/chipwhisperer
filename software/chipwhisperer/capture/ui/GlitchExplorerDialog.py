@@ -30,8 +30,6 @@ import pickle
 import random
 import sys
 from datetime import datetime
-#from PySide.QtCore import *
-#from PySide.QtGui import *
 import sip
 sip.setapi('QVariant',2)
 

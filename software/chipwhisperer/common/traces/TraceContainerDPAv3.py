@@ -27,8 +27,6 @@ __author__ = "Colin O'Flynn"
 
 import os.path
 import sys
-#from PySide.QtGui import *
-#from PySide.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 from chipwhisperer.common.utils import tracereader_dpacontestv3, tracereader_native

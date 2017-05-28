@@ -7,7 +7,6 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-#from PySide import QtCore
 import sip
 sip.setapi('QVariant',2)
 

@@ -25,8 +25,6 @@
 #    along with chipwhisperer.  If not, see <http://www.gnu.org/licenses/>.
 #=================================================
 
-#import PySide.QtCore as qtc
-#import PySide.QtGui as qtg
 import PyQt4.QtCore as qtc
 import PyQt4.QtGui as qtg
 
@@ -38,9 +36,9 @@ class QLineEdit(qtg.QLineEdit):
 
 class QDialog(qtg.QDialog):
     """Makes it easy to show and raise the window at the same time"""
-    def show(self, *args, **kwargs):
-        super(QDialog, self).show(*args, **kwargs)
-        self.raise_()
+		#    def show(self, *args, **kwargs):
+		#        super(QDialog, self).show(*args, **kwargs)
+#        self.raise_()
 
 class QTextBrowser(qtg.QTextBrowser):
     def write(self, text):

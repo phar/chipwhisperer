@@ -24,8 +24,8 @@
 #    along with chipwhisperer.  If not, see <http://www.gnu.org/licenses/>.
 #=================================================
 
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 from chipwhisperer.analyzer.attacks._base import AttackObserver
 from .base import ResultsBase
 from chipwhisperer.common.utils.pluginmanager import Plugin

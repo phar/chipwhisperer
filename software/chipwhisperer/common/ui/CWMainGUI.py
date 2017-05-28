@@ -32,16 +32,6 @@ import sip
 sip.setapi('QVariant',2)
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
-#try:
-#    from PySide.QtCore import *
-#    from PySide.QtGui import *
-#except ImportError, e:
-#    print "**********************************************"
-#    print "ERROR: PySide is required for this program.\nTry installing with 'pip install pyside' first."
-#    print "**********************************************\n\n"
-#
-#    print "Failed to import 'PySide', original exception information:"
-#    raise
 
 try:
     import pyqtgraph

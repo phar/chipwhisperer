@@ -24,8 +24,8 @@
 #=================================================
 import logging
 import sys
-from PySide.QtCore import *
-from PySide.QtGui import *
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 
 from chipwhisperer.common.ui.CWMainGUI import CWMainGUI
 from chipwhisperer.common.utils.util import hexstr2list

@@ -24,8 +24,6 @@
 #=================================================
 
 import sys
-#from PySide.QtCore import *
-#from PySide.QtGui import *
 import sip
 sip.setapi('QVariant',2)
 
