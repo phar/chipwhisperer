@@ -1,4 +1,4 @@
-pen # Authors: Colin O'Flynn
+# Authors: Colin O'Flynn
 #
 # Find this and more at newae.com - this file is part of the chipwhisperer
 # project, http://www.assembla.com/spaces/chipwhisperer

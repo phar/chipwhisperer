@@ -30,13 +30,11 @@ import weakref
 from chipwhisperer.common.utils import util
 import functools
 
-#TODO: pyqtgraph raises a general Exception(), so we can't actually test for importerror. Perhaps should manually check
-#      for pyside first
 try:
     from pyqtgraph.parametertree import Parameter as pyqtgraphParameter
     import chipwhisperer.common.ui.ParameterTypesCustom  # Do not remove!!!
 except:
-    logging.warning("PySide or PyQtGraph not installed, disabling support for pyqtgraph parameters")
+    logging.warning("PyQt or PyQtGraph not installed, disabling support for pyqtgraph parameters")
 
 class Parameterized(object):
     """

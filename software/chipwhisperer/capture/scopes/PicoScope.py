@@ -32,7 +32,7 @@ from chipwhisperer.common.utils.pluginmanager import Plugin
 
 class PicoScopeInterface(ScopeTemplate, Plugin):
     _name = "PicoScope"
-
+	_channels = ["Channel 1", "Channel 2"]
     def __init__(self):
         super(PicoScopeInterface, self).__init__()
 
@@ -75,3 +75,42 @@ class PicoScopeInterface(ScopeTemplate, Plugin):
     def capture(self):
         """Raises IOError if unknown failure, returns 'False' if successful, 'True' if timeout"""
         return self.scopetype.capture()
+
+
+#temprary just to make the plugin work for now
+	def setSampleRate(self, scale,blockSignal=False):
+		pass
+
+	def getSampleRate(self):
+		pass
+
+
+	def setTimeScale(self, scale):
+		pass
+
+
+	def getMagnitudeScale(self):
+		pass
+
+
+	def setMagnitudeScale(self, scale,  blockSignal=False):
+		pass
+
+	def getMagnitudeOffset(self):
+		pass
+
+	def	setMagnitudeOffset(self, offset,  blockSignal=False):
+		pass
+
+	def getTimeOffset(self):
+		pass
+
+	def setTimeOffset(self, offset,  blockSignal=False):
+		pass
+
+	def getChannel(self):
+		pass
+
+	def setChannel(self,chan, blockSignal=None):
+		pass
+

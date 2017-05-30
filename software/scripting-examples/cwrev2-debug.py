@@ -36,7 +36,6 @@
 #Setup path
 import sys
 
-#Check for PySide
 try:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *

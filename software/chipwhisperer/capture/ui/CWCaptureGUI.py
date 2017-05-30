@@ -291,6 +291,15 @@ class CWCaptureGUI(CWMainGUI):
             self.captureMAct.setChecked(False)
 
     def captureM(self):
+        if self.api.getScope() and not self.api.getScope().getStatus():
+            raise Warning("You have a scope selected but not connected.")
+        if self.api.getTarget() and not self.api.getTarget().getStatus():
+            raise Warning("You have a target selected but not connected.")
+        if self.api.getStage() and not self.api.getStage().getStatus():
+            raise Warning("You have a stage selected but not connected.")
+        if self.api.getGlitcher() and not self.api.getGlitcher().getStatus():
+            raise Warning("You have a glitcher selected but not connected.")
+	
         try:
             self.stopCaptureMAct.setEnabled(True)
             self.capturingProgressBar = ProgressBar("Capture in Progress", "Capturing:")

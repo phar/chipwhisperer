@@ -13,27 +13,46 @@ class DummyScopeInterface_SineWave(ScopeTemplate,Plugin):
 	_name = "Waveform Generator"
 
 	def __init__(self):
-		super(self.__class__, self).__init__()
 		self.dataUpdated = util.Signal()
 		self.dataUpdated.connect(self.newDataReceived)
 		self.SampSs = 42000
-		self.YOffset = 0
-		self.XOffset = 0
-		self._channels = ["Sine","Square"]
+		self._channels = ["Sine","Square","Noise"]
 		self._triggers = ["None"]
 		self._armed = 0
 		self._channel = self._channels[0]
 		self.connected = 0
 		self._samplecount = self.SampSs/8.0
 		self._frequency = 2600
+		self._yscale = 1.0
+		self._yoffset = 0.0
+		self._xoffset = 0.0
+		super(self.__class__, self).__init__()
 
 		self.params.addChildren([
-				{'name':'Frequency', 'key':'freq', 'type':'float', 'get':self.getFrequency,'set':self.setFrequency},
-				{'name':'Sample Rate', 'key':'samp', 'type':'float', 'get':self.getSampleRate,'set':self.setSampleRate},
+				{'name':'Frequency', 'key':'freq', 'type':'float', 'siPrefix': True, 'suffix': 'Hz', 'get':self.getFrequency,'set':self.setFrequency},
+				{'name':'Sample Rate', 'key':'samp', 'type':'float', 'siPrefix': True, 'suffix': 'Sa/S','get':self.getSampleRate,'set':self.setSampleRate},
 				{'name':'Duration (samples)', 'key':'tsecs', 'type':'int', 'get':self.getSampleCount,'set':self.setSampleCount},
-				{'name':'Channel', 'key':'chan', 'type':'list', 'values':self._channels, 'get':self.getChannel,'set':self.setChannel},
 		])
-
+	
+	
+	def getMagnitudeScale(self):
+		return self._yscale
+	
+	def setMagnitudeScale(self, scale,  blockSignal=False):
+		self._yscale = scale
+	
+	def getMagnitudeOffset(self):
+		return self._yoffset
+	
+	def	setMagnitudeOffset(self, offset,  blockSignal=False):
+		self._yoffset = offset
+	
+	def getTimeOffset(self):
+		return self._xoffset
+	
+	def setTimeOffset(self, offset,  blockSignal=False):
+		self._xoffset = offset
+	
 	def getChannel(self):
 		return self._channel
 
@@ -52,7 +71,6 @@ class DummyScopeInterface_SineWave(ScopeTemplate,Plugin):
 	def setSampleCount(self,count, blockSignal=None):
 		self._samplecount = count
 	
-
 	def getFrequency(self):
 		return 	self._frequency
 	
@@ -76,9 +94,11 @@ class DummyScopeInterface_SineWave(ScopeTemplate,Plugin):
 	def capture(self):
 		x = np.arange(self._samplecount) # the points on the x axis for plotting
 		if self._channel == "Sine":
-			self.datapoints = np.sin(2 * np.pi * self._frequency * x / self.SampSs)
+			self.datapoints = (np.sin(2 * np.pi * self._frequency * x / self.SampSs) * self._yscale) + self._yoffset
 		elif self._channel == "Square":
-			self.datapoints = signal.square(2 * np.pi * self._frequency * x / self.SampSs)
+			self.datapoints = (signal.square(2 * np.pi * self._frequency * x / self.SampSs) * self._yscale)  + self._yoffset
+		elif self._channel == "Noise":
+			self.datapoints = (np.random.rand(self._samplecount) - .5) + self._yoffset
 		else:
 			self.datapoints = [0]
 

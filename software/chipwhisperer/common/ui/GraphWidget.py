@@ -349,7 +349,7 @@ class GraphWidget(QWidget):
         self.setupPlot(p, 0, True, idString)
 
         if ghostTrace is False:
-            self.dataChanged.emit(trace, startoffset)
+            self.dataChanged.emit(trace.tolist(), startoffset)
 
         # TODO: This was commented out, why?
         self.checkPersistantItems()

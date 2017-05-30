@@ -25,8 +25,6 @@ import logging
 import sys
 import os
 import traceback
-
-#We always import PySide first, to force usage of PySide over PyQt
 from chipwhisperer.common.ui.logger_widget import LoggingWidget
 import sip
 sip.setapi('QVariant',2)
@@ -191,8 +189,10 @@ class CWMainGUI(QMainWindow):
         self.close()
 
     def restoreSettings(self):
-        self.restoreGeometry(QSettings().value("geometry"))
-        self.restoreState(QSettings().value("windowState"))
+        if QSettings().value("geometry"):
+            self.restoreGeometry(QSettings().value("geometry"))
+        if QSettings().value("windowState"):
+            self.restoreState(QSettings().value("windowState"))
 
     def saveSettings(self):
         QSettings().setValue("geometry", self.saveGeometry())
@@ -239,7 +239,6 @@ class CWMainGUI(QMainWindow):
             '<ul>'
             '<li><a href="https://www.python.org/">Python</a></li>'
             '<li><a href="http://qt-project.org/">Qt</a></li>'
-            '<li><a href="http://qt-project.org/wiki/pyside">PySide</a></li>'
             '<li><a href="http://www.pyqtgraph.org/">PyQtGraph</a></li>'
             '<li><a href="http://www.numpy.org/">NumPy</a></li>'
             '<li><a href="http://www.scipy.org/">SciPy</a></li>'
@@ -323,7 +322,7 @@ class CWMainGUI(QMainWindow):
                     version = line.split('=')[1]
                     break
             if version is not None:
-                version = version.lstrchipwhisperer/common/ui/CWMainGUI.pyip(' "').rstrip(' "')
+                version = version.lstrip(' "').rstrip(' "')
                 if self.api.__version__ == version:
                     message = "Your current version is already the most recent one."
                 else:

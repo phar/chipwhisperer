@@ -31,8 +31,8 @@ class AcqKeyTextPattern_Base(Parameterized, Plugin):
 	_name = "None"
 
 	def __init__(self):
-		self._endian = "Little"
 		self.getParams()
+		self.attackvars = {}
 
 	def setTarget(self, target):
 		self._target = target

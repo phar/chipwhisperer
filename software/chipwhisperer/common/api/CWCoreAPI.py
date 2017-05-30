@@ -388,7 +388,6 @@ class CWCoreAPI(Parameterized):
             self.sigNewCapture.emit()
             prefix = starttime.strftime('%Y.%m.%d-%H.%M.%S') + "_"
             ac = AcquisitionController(0, prefix, self)
-#            ac = AcquisitionController(self.getScope(),self.getGlitcher(), self.getStage(), self.getTarget(), writer=None, auxList=self._auxList, keyTextPattern=self.getAcqPattern(),self.getTraceFormat())
             ac.sigPreArm.connect(self.sigPreArm.emit)
             ac.sigNewTextResponse.connect(self.sigNewTextResponse.emit)
             if self.getTarget():

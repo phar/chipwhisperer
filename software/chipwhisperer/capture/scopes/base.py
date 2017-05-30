@@ -32,98 +32,140 @@ from chipwhisperer.common.utils.parameter import Parameterized
 
 
 class ScopeTemplate(Parameterized):
-    _name = "None"
+	_name = "None"
 
-    def __init__(self):
-        self.connectStatus = util.Observable(False)
-        self.getParams().register()
-        self.channels = [Channel(self.getName() + " - Channel " + str(n)) for n in range(1,2)]
+	def __init__(self):
+		self.connectStatus = util.Observable(False)
+		self.getParams().register()
+		self.channels = [Channel(self.getName() + " - Channel " + str(n)) for n in range(1,2)]
 
-    def dcmTimeout(self):
-        pass
+#ok, for any given scope, or channel, these settings are available for scripting, "Channel" will be required for each scope
+		self.params.addChildren([
+			{'name':'Sample Rate', 'key':'sampsper', 'type':'float', 'siPrefix': True, 'suffix': 'Sa/S', 'get':self.getSampleRate,'set':self.setSampleRate},
+			{'name':'Y-Scale', 'key':'yscale', 'type':'float', 'get':self.getMagnitudeScale,'set':self.setMagnitudeScale},
+			{'name':'Y-Offset', 'key':'yoffset', 'type':'float', 'step':1E-3, 'siPrefix': True, 'suffix': 'V', 'get':self.getMagnitudeOffset,'set':self.setMagnitudeOffset},
+			{'name':'X-Offset', 'key':'xoffset', 'type':'float', 'step':1E-6, 'siPrefix': True, 'suffix': 'S','get':self.getTimeOffset,'set':self.setTimeOffset},
+			{'name':'Channel', 'key':'chan', 'type':'list', 'values':self._channels, 'get':self.getChannel,'set':self.setChannel},
+		])
 
-    def setAutorefreshDCM(self, enabled):
-        pass
 
-    def setCurrentScope(self, scope):
-        pass
+	def setSampleRate(self, scale,blockSignal=False):
+		raise AttributeError("must implement")
+	def getSampleRate(self):
+		raise AttributeError("must implement")
 
-    def newDataReceived(self, channelNum, data=None, offset=0, sampleRate=0):
-        self.channels[channelNum].newScopeData(data, offset, sampleRate)
+	def setTimeScale(self, scale):
+		raise AttributeError("must implement")
+	
+	def getMagnitudeScale(self):
+		raise AttributeError("must implement")
 
-    def getStatus(self):
-        return self.connectStatus.value()
+	def setMagnitudeScale(self, scale,  blockSignal=False):
+		raise AttributeError("must implement")
+	
+	def getMagnitudeOffset(self):
+		raise AttributeError("must implement")
 
-    def con(self):
-        for channel in self.channels:
-            channel.register()
-        if self._con():
-            self.connectStatus.setValue(True)
+	def	setMagnitudeOffset(self, offset,  blockSignal=False):
+		raise AttributeError("must implement")
+	
+	def getTimeOffset(self):
+		raise AttributeError("must implement")
 
-    def _con(self):
-        raise Warning("Scope \"" + self.getName() + "\" does not implement method " + self.__class__.__name__ + ".con()")
+	def setTimeOffset(self, offset,  blockSignal=False):
+		raise AttributeError("must implement")
+	
+	def getChannel(self):
+		raise AttributeError("must implement")
+	
+	def setChannel(self,chan, blockSignal=None):
+		raise AttributeError("must implement")
+	
+	def dcmTimeout(self):
+		pass
 
-    def dis(self):
-        if self._dis():
-            for channel in self.channels:
-                channel.deregister()
-        self.connectStatus.setValue(False)
+	def setAutorefreshDCM(self, enabled):
+		pass
 
-    def _dis(self):
-        raise Warning("Scope \"" + self.getName() + "\" does not implement method " + self.__class__.__name__ + ".dis()")
+	def setCurrentScope(self, scope):
+		pass
 
-    def arm(self):
-        """Prepare the scope for capturing"""
-        # NOTE - if reimplementing this, should always check for connection first
-        # if self.connectStatus.value() is False:
-        #     raise Exception("Scope \"" + self.getName() + "\" is not connected. Connect it first...")
-        # raise NotImplementedError("Scope \"" + self.getName() + "\" does not implement method " + self.__class__.__name__ + ".arm()")
-        pass
+	def newDataReceived(self, channelNum, data=None, offset=0, sampleRate=0):
+		self.channels[channelNum].newScopeData(data, offset, sampleRate)
 
-    def capture(self):
-        """Capture one trace and returns True if timeout has happened."""
+	def getStatus(self):
+		return self.connectStatus.value()
 
-        # NOTE: If you have a waiting loop (waiting for arm), call the function util.updateUI() inside that loop to keep
-        #       the UI responsive:
-        #
-        # while self.done() == False:
-        #     time.sleep(0.05)
-        #     util.updateUI()
-        pass
+	def con(self):
+		for channel in self.channels:
+			channel.register()
+		if self._con():
+			self.connectStatus.setValue(True)
+
+	def _con(self):
+		raise Warning("Scope \"" + self.getName() + "\" does not implement method " + self.__class__.__name__ + ".con()")
+
+	def dis(self):
+		if self._dis():
+			for channel in self.channels:
+				channel.deregister()
+		self.connectStatus.setValue(False)
+
+	def _dis(self):
+		raise Warning("Scope \"" + self.getName() + "\" does not implement method " + self.__class__.__name__ + ".dis()")
+
+	def arm(self):
+		"""Prepare the scope for capturing"""
+		# NOTE - if reimplementing this, should always check for connection first
+		# if self.connectStatus.value() is False:
+		#     raise Exception("Scope \"" + self.getName() + "\" is not connected. Connect it first...")
+		# raise NotImplementedError("Scope \"" + self.getName() + "\" does not implement method " + self.__class__.__name__ + ".arm()")
+		pass
+
+	def capture(self):
+		"""Capture one trace and returns True if timeout has happened."""
+
+		# NOTE: If you have a waiting loop (waiting for arm), call the function util.updateUI() inside that loop to keep
+		#       the UI responsive:
+		#
+		# while self.done() == False:
+		#     time.sleep(0.05)
+		#     util.updateUI()
+		pass
 
 
 class Channel(TraceSource):
-    """Save the traces emited by the scopes and notify the TraceSourceObservers."""
+	"""Save the traces emited by the scopes and notify the TraceSourceObservers."""
 
-    def __init__(self, name="Unknown Channel"):
-        TraceSource.__init__(self, name)
-        self._lastData = []
-        self._lastOffset = 0
-        self._sampleRate = 0
+	def __init__(self, name="Unknown Channel"):
+		TraceSource.__init__(self, name)
+		self._lastData = []
+		self._lastOffset = 0
+		self._sampleRate = 0
 
-    def newScopeData(self, data=None, offset=0, sampleRate=0):
-        """Capture the received trace and emit a signal to inform the observers"""
-        self._lastData = data
-        self._lastOffset = offset
-        self._sampleRate = sampleRate
-        if len(data) > 0:
-            self.sigTracesChanged.emit()
-        else:
-            logging.warning('Captured trace in "%s" has len=0' % self.name)
+	def newScopeData(self, data=None, offset=0, sampleRate=0):
+		"""Capture the received trace and emit a signal to inform the observers"""
+		self._lastData = data
+		self._lastOffset = offset
+		self._sampleRate = sampleRate
+		if len(data) > 0:
+			self.sigTracesChanged.emit()
+		else:
+			logging.warning('Captured trace in "%s" has len=0' % self.name)
 
-    def getTrace(self, n=0):
-        if n != 0:
-            raise ValueError("Live trace source has no buffer, so it only supports trace 0.")
-        return self._lastData
+	def getTrace(self, n=0):
+		if n != 0:
+			raise ValueError("Live trace source has no buffer, so it only supports trace 0.")
+		return self._lastData
 
-    def numPoints(self):
-        return len(self._lastData)
+	def numPoints(self):
+		return len(self._lastData)
 
-    def numTraces(self):
-        return 1
+	def numTraces(self):
+		return 1
 
-    def offset(self):
-        return self._lastOffset
+	def offset(self):
+		return self._lastOffset
 
-    def getSampleRate(self):
-        return self._sampleRate
+	def getSampleRate(self):
+		return self._sampleRate

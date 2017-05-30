@@ -17,7 +17,7 @@ class StageTemplate(Parameterized, Plugin):
 		self._minCoord = (0,0)
 		self._maxCoord = (20,20)
 		self._axisSteps = 10
-		self._scanpathiter = None
+		self._scanpathiter = self._nullPath()
 		self._scandone = 1
 		self._stepdelay = .1
 	
@@ -29,6 +29,8 @@ class StageTemplate(Parameterized, Plugin):
 			{'name':'Use Current Position ','key':'setmaxact','type':'action','action':self.useCurrentAsMax},
 			{'name':'Samples Per Axis', 'key':'axis_steps', 'type':'float', 'get':self.getAxisSteps, 'set':self.setAxisSteps},
 			{'name':'Stage Step Latency', 'key':'axis_delay', 'type':'float', 'get':self.getLatency, 'set':self.setLatency},
+			{'name':'Required Traces', 'key':'reqtraces', 'type':'int', 'get':self.updateRequiredTraces},
+			{'name':'Update Number Of Traces','key':'updatenumtrace','type':'action', 'action':lambda _: Parameter.setParameter(['Generic Settings', 'Acquisition Settings', 'Number of Traces',self.updateRequiredTraces()])},
 		])
 	
 	def con(self):
@@ -66,9 +68,12 @@ class StageTemplate(Parameterized, Plugin):
 	
 	def _zScanPath(self):
 		for x in np.linspace(self._minCoord[0],self._maxCoord[0],self._axisSteps):
-			for y in np.linspace(self._minCoord[0],self._maxCoord[0],self._axisSteps):
+			for y in np.linspace(self._minCoord[1],self._maxCoord[1],self._axisSteps):
 				yield (x,y)
 		self._scandone = 0
+
+	def _nullPath(self):
+			yield self.getCurrentCoord()
 
 	def newScan(self):
 		self._scandone = 0
@@ -102,3 +107,24 @@ class StageTemplate(Parameterized, Plugin):
 		self._maxCoord = self.getCurrentCoord()
 		self.findParam('currpos').setValue(self._currCoord)
 		self.findParam('corner1').setValue(self._currCoord)
+
+	def getMinCoord(self):
+		return self._minCoord
+	
+	def setMinCoord(self, mincoord,  blockSignal=False):
+		self._minCoord = mincoord
+	
+	def getMaxCoord(self):
+		return self._maxCoord
+	
+	def updateRequiredTraces(self):
+		return self.findParam('axis_steps').getValue() *   self.findParam('axis_steps').getValue()
+
+	def setMaxCoord(self, maxcoord,  blockSignal=False):
+		self._maxCoord = maxcoord
+	
+	def getAxisSteps(self):
+		return self._axisSteps
+	
+	def setAxisSteps(self, steps,  blockSignal=False):
+		self._axisSteps = steps

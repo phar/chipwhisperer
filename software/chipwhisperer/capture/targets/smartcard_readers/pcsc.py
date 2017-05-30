@@ -33,9 +33,12 @@ try:
     from smartcard.CardRequest import CardRequest
     from smartcard.CardConnection import CardConnection
     from smartcard.util import toHexString
-except ImportError:
-    raise ImportError("Smartcard libraries are missing")
-
+except ImportError,e:
+	print "************************************************************"
+	print "python smart cart libararies are required to use the smartcard target"
+	print "https://pyscard.sourceforge.io/"
+	print "************************************************************"
+	raise ImportError(e)
 
 class ReaderPCSC(ReaderTemplate):
     _name = "PC/SC Reader"

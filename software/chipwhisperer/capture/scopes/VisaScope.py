@@ -29,42 +29,72 @@ from .base import ScopeTemplate
 from chipwhisperer.common.utils import pluginmanager
 from chipwhisperer.common.utils.parameter import setupSetParam
 from chipwhisperer.common.utils.pluginmanager import Plugin
-import loggin
+import logging
 
 try:
 	import visa
 except ImportError, e:
+	print "************************************************************"
 	print "NI-Visa and Pyvisa are required for VISA instrument support"
+	print "https://www.ni.com/visa/"
+	print "https://pyvisa.readthedocs.io/en/stable/"
+	print "************************************************************"
 	raise ImportError(e)
 
 class VisaScopeInterface(ScopeTemplate, Plugin):
 	_name = "VISA Scope"
 
 	def __init__(self):
-		ScopeTemplate.__init__(self)
 
 		self.scopes = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.scopes.visascope_interface", True, False)
 		self.scopetype = None
 		logging.info(self.scopes)
-	
+		self._channel = "Channel 1"
+		self._channels = ["Channel 1", "Channel 2", "Channel 3","Channel 4","Channel Aux"]
+		ScopeTemplate.__init__(self)
 		self.params.addChildren([
 			{'name':'VISA Resource String', 'key':'connStr', 'type':'str', 'value':'TCPIP::192.168.1.15::INSTR'},
 			{'name':'Identified Instrument','key':'scopeid','type':'str', 'value':'None'},
 			{'name':'Scope Driver','key':'scopedriver','type':'str', 'value':'None'},
 			{'name':'Query Scope', 'key':'qscope', 'type':'action', 'action':self.queryscope},
 			{'name':'Reset Scope', 'key':'rscope', 'type':'action', 'action':self.resetscope},
-			{'name':'Sample Rate', 'key':'sampsper', 'type':'float', 'siPrefix': True, 'suffix': 'Sa/S', 'value':0},
-			{'name':'X-Scale', 'key':'xscale', 'type':'float', 'value':0},
-			{'name':'Y-Scale', 'key':'yscale', 'type':'float', 'value':0},
-			 {'name':'Y-Offset', 'key':'yoffset', 'type':'float', 'step':1E-3, 'siPrefix': True, 'suffix': 'V', 'value':0},
-			 {'name':'X-Offset', 'key':'xoffset', 'type':'float', 'step':1E-6, 'siPrefix': True, 'suffix': 'S','value':0},
-								 
-								 #			 {'name':'Download Offset', 'key':'xdisporigin', 'type':'int',  'limits':(0,1E9),'value':0},
-								 #			 {'name':'Download Size', 'key':'xdisprange', 'type':'int', 'limits':(0,1E9),'value':0},
 		])
 		self.params.init()
 
 
+	def setSampleRate(self, scale,  blockSignal=False):
+		pass
+	
+	def getSampleRate(self):
+		pass
+	
+	def setTimeScale(self, scale):
+		pass
+	
+	def getMagnitudeScale(self):
+		pass
+	
+	def setMagnitudeScale(self, scale,  blockSignal=False):
+		pass
+	
+	def getMagnitudeOffset(self):
+		pass
+	
+	def	setMagnitudeOffset(self, offset,  blockSignal=False):
+		pass
+	
+	def getTimeOffset(self):
+		pass
+	
+	def setTimeOffset(self, offset,  blockSignal=False):
+		pass
+	
+	def getChannel(self):
+		return self._channel
+	
+	def setChannel(self,chan, blockSignal=None):
+		self._channel = chan
+	
 	def queryscope(self,arg):
 		vrm = visa.ResourceManager()
 		self.visaInst = vrm.open_resource(self.findParam('connStr').getValue())

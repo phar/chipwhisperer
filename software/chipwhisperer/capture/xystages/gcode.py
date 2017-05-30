@@ -36,12 +36,6 @@ class GCodeStageTemplate(StageTemplate, Plugin):
 	def setFeedRate(self, rate,  blockSignal=False):
 		self._feedrate = rate
 	
-	def getAxisSteps(self):
-		return self._axisSteps
-	
-	def setAxisSteps(self, steps,  blockSignal=False):
-		self._axisSteps = steps
-	
 
 	def getStageDev(self):
 		return self._devpath
@@ -54,30 +48,10 @@ class GCodeStageTemplate(StageTemplate, Plugin):
 	
 	def setStageDevBPS(self, path,  blockSignal=False):
 		self._devbps = path
-
-
-	def getMinCoord(self):
-		return self._minCoord
 	
-	def setMinCoord(self, mincoord,  blockSignal=False):
-		self._minCoord = mincoord
-
-	def getMaxCoord(self):
-		return self._minCoord
-	
-	def setMaxCoord(self, mincoord,  blockSignal=False):
-		self._minCoord = mincoord
-
-
-	def getCurrentCoord(self):
-		if self._dev == None:
-			return (None,None) #fixme
-		else:
-			return self._currCoord
 
 	def updateStagePos(self):
-		self._dev.getPos()
-		self._currCoord = (self._dev.mmpos["X"],self._dev.mmpos["Y"])
+		self.getCurrentCoord()
 
 	def setCurrentCoord(self, coord,  blockSignal=False):
 		if self._dev == None:
@@ -105,5 +79,12 @@ class GCodeStageTemplate(StageTemplate, Plugin):
 		if self._dev != None:
 			self._dev.close()
 		self._dev = None
-		return True
+
+
+	def getCurrentCoord(self): #fixme
+		if self._dev != None:
+			self._currCoord = (self._dev.mmpos["X"],self._dev.mmpos["Y"])
+			return self._currCoord
+		else:
+			return (None,None)
 

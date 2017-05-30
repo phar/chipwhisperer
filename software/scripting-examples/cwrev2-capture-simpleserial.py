@@ -39,7 +39,6 @@ import sys
 #Import the ChipWhispererCapture module
 import chipwhisperer.capture.ChipWhispererCapture as cwc
 
-#Check for PySide
 try:
     from PyQt4.QtCore import *
     from PyQt4.QtGui import *

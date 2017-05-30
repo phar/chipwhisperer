@@ -26,7 +26,7 @@ import os
 
 #If we have QSettings(), use that to get values from registry
 try:
-    from PySide.QtCore import QSettings
+    from PyQt4.QtCore import QSettings
     settings_backendclass = QSettings
 except ImportError:
     settings_backendclass = None
@@ -63,7 +63,7 @@ class Settings(object):
 
     def value(self, name, default=None):
         """Get the value from the settings, if not present return default"""
-
+	
         #Try the backend first (if available)
         val = None
         if self._backend:
@@ -76,11 +76,10 @@ class Settings(object):
             except KeyError:
                 val = default
 
-        return val
+        return str(val)
 
     def setValue(self, name, value):
         """Set the value"""
-
         self._settings_dict[name] = value
 
         #Backend as well

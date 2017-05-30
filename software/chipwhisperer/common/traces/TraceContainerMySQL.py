@@ -22,7 +22,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with chipwhisperer.  If not, see <http://www.gnu.org/licenses/>.
 import logging
-import pickle
+import json
 import numpy as np
 from _base import TraceContainer
 from _cfgfile import makeAttrDict
@@ -30,9 +30,10 @@ from _cfgfile import makeAttrDict
 try:
     import umysql as sql
 except ImportError, e:
-    # This isn't really needed, no need to bother users
-    # print "umysql required: https://pypi.python.org/pypi/umysql"
-    raise ImportError(e)
+	print "************************************************************"
+	print "umysql required for mysql tracecontainers https://pypi.python.org/pypi/umysql"
+	print "************************************************************"
+	raise ImportError(e)
 
 
 class TraceContainerMySQL(TraceContainer):
@@ -44,7 +45,6 @@ class TraceContainerMySQL(TraceContainer):
         self.idOffset = 0
         self.lastId = 0
         self.openMode = openMode
-        self.fmt = None
 
         traceParams = [{'name':'MySQL Configuration', 'type':'group', 'children':[
                         {'name':'Server Address', 'key':'addr', 'type':'str', 'value':'127.0.0.1'},
@@ -61,7 +61,6 @@ class TraceContainerMySQL(TraceContainer):
             traceParams[0]['children'].append({'name':'Relist Tables', 'key':'tableListAct', 'type':'action'})
             traceParams[0]['children'].append({'name':'Table List', 'key':'tableNameList', 'type':'list', 'values':[], 'value':'', 'linked':['Table Name']})
 
-        traceParams[0]['children'].append({'name':'Trace Format', 'key':'traceFormat', 'type':'list', 'values':['NumPy Pickle'], 'value':'NumPy Pickle', 'set':self.setFormat})
         self.params.addChildren(traceParams)
 
         #Connect actions if applicable
@@ -79,15 +78,6 @@ class TraceContainerMySQL(TraceContainer):
         #Format name must agree with names from TraceContainerFormatList
         self.config.setAttr("format", "mysql")
 
-    def setFormat(self, fmt):
-        self.fmt = fmt
-
-    def format(self):
-        if self.fmt is None:
-            self.fmt = self.findParam('traceFormat').getValue()
-
-        return self.fmt
-
     def makePrefix(self, mode='prefix'):
         if mode == 'prefix':
             prefix = self.config.attr('prefix')
@@ -102,7 +92,8 @@ class TraceContainerMySQL(TraceContainer):
 
         raise ValueError("Invalid mode: %s"%mode)
 
-    def prepareDisk(self):
+    def prepareTraceSet(self,setid):
+        self.setid = setid
         self.con()
         #CREATE DATABASE `cwtraces` /*!40100 COLLATE 'utf8_unicode_ci' */
         traceprefix = self.makePrefix(self.getParams.findParam('tableNameType').getValue())
@@ -191,13 +182,11 @@ class TraceContainerMySQL(TraceContainer):
         self.updateConfigData()
 
     def formatWave(self, wave, read=False):
-        if self.getParams.format() == "NumPy Pickle":
-            if read == False:
-                return pickle.dumps(wave, protocol=2)
-            else:
-                return np.array(pickle.loads(wave))
+        if read == False:
+            return json.dumps(wave.tolist())
         else:
-            raise AttributeError("Invalid Format for MySQL")
+            return np.array(json.loads(wave))
+
 
     def addTrace(self, trace, textin, textout, key, dtype=np.double):
         strTextin = ""

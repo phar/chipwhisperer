@@ -44,6 +44,7 @@ class TraceContainer(Parameterized, Plugin):
 	def __init__(self, configfile=None):
 		self.configfile = configfile
 		self.fmt = None
+		self.setid = None
 		self.getParams().register()
 		self.getParams().addChildren([
 				{'name':'Config File', 'key':'cfgfile', 'type':'str', 'readonly':True, 'value':''},
@@ -244,9 +245,9 @@ class TraceContainer(Parameterized, Plugin):
 
 		return newdict
 
-	def prepareDisk(self):
+	def prepareTraceSet(self,setid):
 		"""Placeholder called after creating a new file setup, but before actually writing traces to it"""
-		
+		self.setid = setid
 		#if self.traces is None:
 		#    self.traces = np.zeros((self.tracehint, self.pointhint))
 		

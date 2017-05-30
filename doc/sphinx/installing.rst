@@ -165,11 +165,11 @@ Python Setup
 On Linux, installing Python & all the associated packages is much easier than on Windows. Typically you can install them from a package manager, if you are
 using Fedora Core or similar, just type::
 
-    $ sudo yum install python27 python27-devel python27-libs python-pyside numpy scipy python-configobj pyusb
+    $ sudo yum install python27 python27-devel python27-libs numpy scipy python-configobj pyusb
 
 On Ubuntu or similar:
 
-    $ sudo apt-get install python2.7 python2.7-dev python2.7-libs python-numpy python-scipy python-pyside python-configobj python-setuptools python-pip
+    $ sudo apt-get install python2.7 python2.7-dev python2.7-libs python-numpy python-scipy python-configobj python-setuptools python-pip
     $ sudo pip install pyusb-1.0.0b1
 
 
@@ -279,21 +279,10 @@ Python Setup
 
     $ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
-3. Install PySide using homebrew::
+3. Install PyQt using homebrew::
 
-    $ brew install pyside
-   
-   The install will probably print a message like this:
- 
-    .. image:: /images/install_macosx_brewpath.png   
-   
-   Note you must run that command in order to successfully import the modules, in this example it would be::
-   
-    $ mkdir -p /Users/macmini/Library/Python/2.7/lib/python/site-packages
-    $ echo 'import site; site.addsitedir("/usr/local/lib/python2.7/site-packages")' >> /Users/macmini/Library/Python/2.7/lib/python/site-packages/homebrew.pth
-    
-  Be sure to adjust paths for your system as described in the message from homebrew.
-    
+    $ brew install pyqt
+       
 4. Install libusb backend using homebrew::
 
     $ brew install libusb

@@ -32,9 +32,13 @@ from chipwhisperer.common.traces._cfgfile import TraceContainerConfig
 import chipwhisperer.common.utils.qt_tweaks as QtFixes
 
 try:
-    from traces.TraceContainerMySQL import TraceContainerMySQL
+    from chipwhisperer.common.traces.TraceContainerMySQL import TraceContainerMySQL
 except ImportError:
     TraceContainerMySQL = None
+try:
+	from chipwhisperer.common.traces.TraceContainerSQLite import TraceContainerSQLite
+except ImportError:
+	TraceContainerSQLite = None
 
 
 class TraceManagerImport(QtFixes.QDialog):
@@ -58,6 +62,8 @@ class TraceManagerImport(QtFixes.QDialog):
         self.modName.addItem("DPAContestv3")
         if TraceContainerMySQL is not None:        
             self.modName.addItem("MySQL", TraceContainerMySQL)
+        if TraceContainerSQLite is not None:
+            self.modName.addItem("SQLite", TraceContainerSQLite)
         self.modName.currentIndexChanged.connect(self.traceTypeChanged)
         
         layout.addWidget(self.modName)

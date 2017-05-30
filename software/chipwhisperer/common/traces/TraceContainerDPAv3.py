@@ -42,12 +42,13 @@ class TraceContainerDPAv3(TraceContainer):
         super(TraceContainerDPAv3, self).__init__()
         self.dir = "."
 
+
     def setDirectory(self, directory):
         self.dir = directory
 
         os.mkdir(directory)
 
-    def prepareDisk(self):
+    def prepareTraceSet(self,setid):
         self.startTime = gmtime()
         self.setDirectory("capture-%s/"%strftime("%Y.%m.%d-%H.%M.%S", self.startTime))
         

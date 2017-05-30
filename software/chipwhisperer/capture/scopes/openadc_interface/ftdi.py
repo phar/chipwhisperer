@@ -25,8 +25,13 @@ from chipwhisperer.common.utils.pluginmanager import Plugin
 from chipwhisperer.common.utils.parameter import Parameterized, Parameter, setupSetParam
 try:
     import ftd2xx as ft
-except:
-    ft = None
+except ImportError, e:
+	print "************************************************************"
+	print "the ftdi2xx module is required to use the SASEBO-W/SAKURA-G OpenADC interface"
+	print "https://pypi.python.org/pypi/ftd2xx"
+	print "************************************************************"
+	raise ImportError(e)
+	ft = None
 
 
 class OpenADCInterface_FTDI(Parameterized, Plugin):

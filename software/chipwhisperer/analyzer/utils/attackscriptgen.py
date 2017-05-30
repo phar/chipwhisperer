@@ -25,7 +25,7 @@
 #=================================================
 import sys
 from datetime import *
-from PySide.QtCore import *
+from PyQt4.QtCore import *
 from chipwhisperer.common.utils.parameter import Parameterized, Parameter, setupSetParam
 from chipwhisperer.analyzer.utils.scripteditor import MainScriptEditor
 from chipwhisperer.common.results.base import ResultsBase

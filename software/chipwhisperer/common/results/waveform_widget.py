@@ -117,6 +117,7 @@ class WaveFormWidget(GraphWidget, ResultsBase, ActiveTraceObserver, Plugin):
                     if yaxisScaleFactor != 1.0 or yaxisOffsetFactor != 0.0:
                         trace = [yaxisOffsetFactor + x * yaxisScaleFactor for x in trace]
                     #TODO - Not sure if should add _traceSource.offset() or not?
+					
                     self.passTrace(trace[pstart:pend+1], pstart + self._traceSource.offset(), idString = str(tnum), xaxis=xaxis, dsmode=dsmode)
 
                     if self.findParam('Redraw after Each').getValue():

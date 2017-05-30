@@ -35,7 +35,6 @@ for specific license information.
 projects, which may also have additional license restrictions or information:
 
  * `Python <http://qt-project.org/>`__
- * `PySide <http://qt-project.org/wiki/pyside>`__
  * `PyQtGraph <http://www.pyqtgraph.org/>`__
  * `NumPy <http://www.numpy.org/>`__
  * `SciPy <http://www.scipy.org/>`__

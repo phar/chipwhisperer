@@ -41,14 +41,13 @@ import chipwhisperer.capture.ChipWhispererCapture as cwc
 from chipwhisperer.capture.scopes.cwhardware.ChipWhispererExtra import CWAdvTrigger
 from chipwhisperer.capture.utils.SerialProtocols import CWCalcClkDiv as CalcClkDiv
 
-#Check for PySide
 try:
 	import sip
 	sip.setapi('QVariant',2)
 	from PyQt4.QtGui import *
 	from PyQt4.QtCore import *
 except ImportError:
-    print "ERROR: PySide is required for this program"
+    print "ERROR: PyQt is required for this program"
     sys.exit()
 
 exitWhenDone=False

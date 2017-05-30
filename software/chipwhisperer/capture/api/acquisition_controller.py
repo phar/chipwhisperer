@@ -30,8 +30,6 @@ from datetime import datetime, date, time
 
 
 class AcquisitionController:
-	#	def __init__(self,setid, prefix, scope=None, glitcher=None, stage=None, target=None, auxList=None, keyTextPattern=None, format=None):
-
 	def __init__(self,setid, prefix, api):
 		self.sigTraceDone = util.Signal()
 		self.sigNewTextResponse = util.Signal()
@@ -50,7 +48,7 @@ class AcquisitionController:
 		self.stage = self.api.getStage()
 		self.auxList = self.api._auxList
 		self.keyTextPattern = self.api.getAcqPattern()
-		self.writer = None
+		self.writer = self.api.getTraceFormat()
 		
 		if self.target != None:
 			self.keyTextPattern.setTarget(target)
@@ -175,7 +173,7 @@ class AcquisitionController:
 			self.keyTextPattern.initAttackVars()
 
 		if self.writer:
-			self.writer.prepareDisk()
+			self.writer.prepareTraceSet(self.setid)
 
 		if self.auxList:
 			for aux in self.auxList:
@@ -196,12 +194,14 @@ class AcquisitionController:
 					if self.writer:
 						if "key" in self.attackvars:
 							self.writer.setKnownKey(self.attackvars["key"])
+						
 						for channelNum in channelNumbers:
 							if self.scope != None:
 								trace = self.scope.channels[channelNum].getTrace()
 							else:
 								trace = [0]
 							self.writer.addTrace(trace, self.attackvars, channelNum=channelNum)
+		
 				except ValueError as e:
 					logging.warning('Exception caught in adding trace %d, trace skipped.' % self.currentTrace)
 					logging.debug(str(e))

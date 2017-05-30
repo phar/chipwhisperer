@@ -5,10 +5,8 @@ from chipwhisperer.common.utils.parameter import Parameterized, Parameter
 from chipwhisperer.common.utils.gcode_helper import GCODE
 from _base import StageTemplate
 from chipwhisperer.common.api.CWCoreAPI import CWCoreAPI
-
 import numpy as np
 import time
-
 
 
 class DummyStageTemplate(StageTemplate, Plugin):
@@ -25,37 +23,6 @@ class DummyStageTemplate(StageTemplate, Plugin):
 		])
 
 
-	def getLatency(self):
-		return self._stepdelay
-	
-	def setLatency(self, delay,  blockSignal=False):
-		self._stepdelay = delay
-	
-	def getAxisSteps(self):
-		return self._axisSteps
-	
-	def setAxisSteps(self, steps,  blockSignal=False):
-		self._axisSteps = steps
-	
-	def getMinCoord(self):
-		return self._minCoord
-	
-	def setMinCoord(self, mincoord,  blockSignal=False):
-		self._minCoord = mincoord
-
-	def getMaxCoord(self):
-		return self._minCoord
-	
-	def setMaxCoord(self, mincoord,  blockSignal=False):
-		self._minCoord = mincoord
-
-	def getCurrentCoord(self):
-		return self._currCoord
-
-	def setCurrentCoord(self, coord,  blockSignal=False):
-		self._currCoord = (coord[0],coord[1])
-		pass
-	
 	def enableStageMotors(self):
 		pass
 
@@ -71,4 +38,8 @@ class DummyStageTemplate(StageTemplate, Plugin):
 	def stageMovementLatencyPause(self):
 		time.sleep(self._stepdelay)
 
-#return self.connectStatus.value()
+	def getCurrentCoord(self):
+		return self._currCoord
+
+	def setCurrentCoord(self, coord,  blockSignal=False):
+		self._currCoord = coord

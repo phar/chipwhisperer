@@ -30,122 +30,125 @@ from chipwhisperer.common.utils.parameter import setupSetParam
 
 
 class AcqKeyTextPattern_Basic(AcqKeyTextPattern_Base):
-    _name = "Basic"
+	_name = "Basic"
 
-    def __init__(self, target=None):
-        AcqKeyTextPattern_Base.__init__(self)
-        self._fixedKey = True
-        self._fixedPlain = False
-        self.inittext = '00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F'
-        self.initkey = '2B 7E 15 16 28 AE D2 A6 AB F7 15 88 09 CF 4F 3C'
-        self._key = util.hexStrToByteArray(self.initkey)
-        self._textin = util.hexStrToByteArray(self.inittext)
-        self.types = {'Random': False, 'Fixed': True}
+	def __init__(self, target=None):
+		AcqKeyTextPattern_Base.__init__(self)
+		self._fixedKey = True
+		self._fixedPlain = False
+		self.attackvars = {"key":None, "textin":None, "textout":None}
 
-        self.getParams().addChildren([
-            {'name':'Key', 'type':'list', 'values':self.types , 'get':self.getKeyType, 'set':self.setKeyType, 'action':lambda p:self.findParam("initkey").show(p.getValue()), 'linked':['initkey']},
-            # {'name':'Size', 'type':'int'},
-            {'name':'Fixed Encryption Key', 'key':'initkey', 'type':'str', 'get':self.getInitialKey, 'set':self.setInitialKey, 'visible':self.getKeyType()},
-            {'name':'Plaintext', 'type':'list', 'values':self.types , 'get':self.getPlainType, 'set':self.setPlainType, 'action':lambda p:self.findParam("inittext").show(p.getValue()), 'linked':['inittext']},
-            {'name':'Fixed Plaintext', 'key':'inittext', 'type':'str', 'get':self.getInitialText, 'set':self.setInitialText, 'visible':self.getPlainType()},
-        ])
-        self.setTarget(target)
+		self.inittext = '00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F'
+		self.initkey = '2B 7E 15 16 28 AE D2 A6 AB F7 15 88 09 CF 4F 3C'
+		
+		self.attackvars['key'] = util.hexStrToByteArray(self.initkey)
+		self.attackvars['textin'] = util.hexStrToByteArray(self.inittext)
+		self.types = {'Random': False, 'Fixed': True}
+		
+		self.getParams().addChildren([
+			{'name':'Key', 'type':'list', 'values':self.types , 'get':self.getKeyType, 'set':self.setKeyType, 'action':lambda p:self.findParam("initkey").show(p.getValue()), 'linked':['initkey']},
+			# {'name':'Size', 'type':'int'},
+			{'name':'Fixed Encryption Key', 'key':'initkey', 'type':'str', 'get':self.getInitialKey, 'set':self.setInitialKey, 'visible':self.getKeyType()},
+			{'name':'Plaintext', 'type':'list', 'values':self.types , 'get':self.getPlainType, 'set':self.setPlainType, 'action':lambda p:self.findParam("inittext").show(p.getValue()), 'linked':['inittext']},
+			{'name':'Fixed Plaintext', 'key':'inittext', 'type':'str', 'get':self.getInitialText, 'set':self.setInitialText, 'visible':self.getPlainType()},
+		])
+		self.setTarget(target)
 
-    def getKeyType(self):
-        return self._fixedKey
+	def getKeyType(self):
+		return self._fixedKey
 
-    @setupSetParam("Key")
-    def setKeyType(self, t):
-        self._fixedKey = t
+	@setupSetParam("Key")
+	def setKeyType(self, t):
+		self._fixedKey = t
 
-    def getPlainType(self):
-        return self._fixedPlain
+	def getPlainType(self):
+		return self._fixedPlain
 
-    @setupSetParam("Plaintext")
-    def setPlainType(self, t):
-        self._fixedPlain = t
+	@setupSetParam("Plaintext")
+	def setPlainType(self, t):
+		self._fixedPlain = t
 
-    def getInitialKey(self):
-        return " ".join(["%02X"%b for b in self._key])
+	def getInitialKey(self):
+		return " ".join(["%02X"%b for b in self.attackvars['key']])
 
-    @setupSetParam("Fixed Encryption Key")
-    def setInitialKey(self, initialKey, binaryKey=False):
-        if initialKey:
-            if binaryKey:
-                keyStr = ''
-                for s in initialKey:
-                    keyStr += '%02x ' % s
-                self._key = bytearray(initialKey)
-            else:
-                keyStr = initialKey
-                self._key = util.hexStrToByteArray(initialKey)
+	@setupSetParam("Fixed Encryption Key")
+	def setInitialKey(self, initialKey, binaryKey=False):
+		if initialKey:
+			if binaryKey:
+				keyStr = ''
+				for s in initialKey:
+					keyStr += '%02x ' % s
+				self.attackvars['key'] = bytearray(initialKey)
+			else:
+				keyStr = initialKey
+				self.attackvars['key'] = util.hexStrToByteArray(initialKey)
 
-            self.initkey = keyStr
+			self.initkey = keyStr
 
-    def getInitialText(self):
-        return " ".join(["%02X" % b for b in self._textin])
+	def getInitialText(self):
+		return " ".join(["%02X" % b for b in self.attackvars['textin']])
 
-    @setupSetParam("Fixed Plaintext")
-    def setInitialText(self, initialText, binaryText=False):
-        if initialText:
-            if binaryText:
-                textStr = ''
-                for s in initialText:
-                    textStr += '%02x ' % s
-                self._textin = bytearray(initialText)
-            else:
-                textStr = initialText
-                self._textin = util.hexStrToByteArray(initialText)
+	@setupSetParam("Fixed Plaintext")
+	def setInitialText(self, initialText, binaryText=False):
+		if initialText:
+			if binaryText:
+				textStr = ''
+				for s in initialText:
+					textStr += '%02x ' % s
+				self.attackvars['textin'] = bytearray(initialText)
+			else:
+				textStr = initialText
+				self.attackvars['textin'] = util.hexStrToByteArray(initialText)
 
-            self.inittext = textStr
-
-
-    def initAttackVars(self):
-        return {"key":None, "textin":None, "textout":None}
-	
-    def nextAttackVars(self):
-        if self._fixedKey is False:
-            self._key = bytearray(self.keyLen())
-            for i in range(0, self.keyLen()):
-                self._key[i] = random.randint(0, 255)
-
-        if self._fixedPlain is False:
-            self._textin = bytearray(self.textLen())
-            for i in range(0, self.textLen()):
-                self._textin[i] = random.randint(0, 255)
-
-        # Check pair works with target
-        self.validateKey()
-        self.validateText()
-        return {"key":self._key,"textin": self._textin}
+			self.inittext = textStr
 
 
-#    def initPair(self):
-#        pass
+	def initAttackVars(self):
+		return self.attackvars
 
-#    def newPair(self):
-#        if self._fixedKey is False:
-#            self._key = bytearray(self.keyLen())
-#            for i in range(0, self.keyLen()):
-#                self._key[i] = random.randint(0, 255)
-#
-#        if self._fixedPlain is False:
-#            self._textin = bytearray(self.textLen())
-#            for i in range(0, self.textLen()):
-#                self._textin[i] = random.randint(0, 255)
-#
-#        # Check pair works with target
-#        self.validateKey()
-#        self.validateText()
-#
-#        return self._key, self._textin
+	def nextAttackVars(self):
+		if self._fixedKey is False:
+			self.attackvars['key'] = bytearray(self.keyLen())
+			for i in range(0, self.keyLen()):
+				self.attackvars['key'][i] = random.randint(0, 255)
 
-    def __str__(self):
-        key = "Key=" + self.findParam("Key").getValueKey()
-        if self._fixedKey:
-            key = key + ":" + self.findParam("initkey").getValue()
-        plaintext = "Plaintext=" + self.findParam("Plaintext").getValueKey()
-        if self._fixedPlain:
-            plaintext = plaintext + ":" + self.findParam("inittext").getValue()
+		if self._fixedPlain is False:
+			self.attackvars['textin'] = bytearray(self.textLen())
+			for i in range(0, self.textLen()):
+				self.attackvars['textin'] = random.randint(0, 255)
 
-        return self.getName() + " (%s, %s)" % (key, plaintext)
+		# Check pair works with target
+		self.validateKey()
+		self.validateText()
+		return  self.attackvars
+
+
+	#    def initPair(self):
+	#        pass
+
+	#    def newPair(self):
+	#        if self._fixedKey is False:
+	#            self._key = bytearray(self.keyLen())
+	#            for i in range(0, self.keyLen()):
+	#                self._key[i] = random.randint(0, 255)
+	#
+	#        if self._fixedPlain is False:
+	#            self._textin = bytearray(self.textLen())
+	#            for i in range(0, self.textLen()):
+	#                self._textin[i] = random.randint(0, 255)
+	#
+	#        # Check pair works with target
+	#        self.validateKey()
+	#        self.validateText()
+	#
+	#        return self._key, self._textin
+
+	def __str__(self):
+		key = "Key=" + self.findParam("Key").getValueKey()
+		if self._fixedKey:
+			key = key + ":" + self.findParam("initkey").getValue()
+		plaintext = "Plaintext=" + self.findParam("Plaintext").getValueKey()
+		if self._fixedPlain:
+			plaintext = plaintext + ":" + self.findParam("inittext").getValue()
+
+		return self.getName() + " (%s, %s)" % (key, plaintext)

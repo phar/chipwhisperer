@@ -24,13 +24,19 @@ class TraceContainerSQLite(TraceContainer):
 		self.lastId = 0
 		self.openMode = openMode
 		self.fmt = None
+		self.setid = None
 			#	self.getParams().addChildren([{'name':'SQLite Configuration', 'type':'group', 'children':[
 	#                       {'name':'Table Name', 'key':'tableName', 'type':'str', 'value':'CWTable1', 'readonly':True}
 	#			  ]}])
 
 		#Format name must agree with names from TraceContainerFormatList
 		self.config.setAttr("format", "sqlite")
+		
 
+	def setDirectory(self, directory):
+		self.dir = directory
+		os.mkdir(directory)
+	
 	def makePrefix(self, mode='prefix'):
 		if mode == 'prefix':
 			prefix = self.config.attr('prefix')
@@ -44,14 +50,21 @@ class TraceContainerSQLite(TraceContainer):
 			return prefix
 		raise ValueError("Invalid mode: %s"%mode)
 
-	def prepareDisk(self):
+	def prepareTraceSet(self,setid):
+		self.setid = setid
 		self.con()
 	
 	def prepareDB(self):
-		self.db.execute("create table IF NOT EXISTS cwtraces(trace_id integer PRIMARY KEY AUTOINCREMENT,trace   text, trace_data text,  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP);" )
+		self.db.execute("create table IF NOT EXISTS cwtraces_%d (trace_id integer PRIMARY KEY AUTOINCREMENT,trace   text, trace_data text,  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP);" % self.setid )
 
 	def con(self):
-		self.dbfile = os.path.dirname(self.config.configFilename()) + ".".join(os.path.basename(self.config.configFilename()).split("_")[:-1])+".sqlite3"
+		logging.info(dir(self))
+		logging.info(dir(self.config))
+		logging.info(self.configfile)
+		self.dbfile = CWCoreAPI.getInstance().project().getDataFilepath("traces.sqlite3")["abs"]
+		logging.info(CWCoreAPI.getInstance().project())
+
+
 		logging.info("waveform database %s" % self.dbfile)
 		self.db = sqlite3.connect(self.dbfile) #fixme.. in project directory!
 		self.prepareDB()
@@ -59,29 +72,34 @@ class TraceContainerSQLite(TraceContainer):
 
 		cx = self.db.cursor()
 		cx.execute("select sqlite_version();")
-		result = cx.fetchone()
+		result = cx.fetchone()[0]
 		logging.info('SQLite Version: %s' % result)
 
 
 	def updatePointsTraces(self):
-		res = self.db.query("SELECT COUNT(*) FROM cwtraces" )
-		self._numTraces = res.rows[0][0]
+		cx = self.db.cursor()
+		cx.execute("SELECT COUNT(*) FROM cwtraces_%d"  % self.setid )
+		self._numTraces = cx.fetchone()[0]
 
-		wav = self.db.query("SELECT Wave FROM cwtraces  order by trace_id LIMIT 1 OFFSET ?" , ( 0))
+		cx = self.db.cursor()
+		cx.execute("SELECT trace FROM cwtraces_%d  order by trace_id LIMIT 1"  % self.setid)
+		wav = cx.fetchone()[0]
 		self._numPoints = self.formatWave(wav, read=True).shape[0]
 
 	def updateConfigData(self):
 		if self.db != None:
-			self.tableName = self.getParams.findParam('tableName').getValue()
-			res = self.db.query("SELECT COUNT(*) FROM cwtraces")
-			self._numTraces = res.rows[0][0]
+			cx = self.db.cursor()
+			cx.execute("SELECT COUNT(*) FROM cwtraces_%d" % self.setid )
+			self._numTraces = cx.fetchone()[0]
 			self.config.setAttr('numTraces', self._numTraces)
 
-			wav = self.db.query("SELECT Wave FROM cwtraces  order by trace_id  LIMIT 1 OFFSET ?",(0))
+			cx = self.db.cursor()
+			cx.execute("SELECT trace FROM cwtraces_%d  order by trace_id  LIMIT 1" % self.setid)
+			wav = cx.fetchone()[0]
 			self._numPoints = self.formatWave(wav, read=True).shape[0]
 			self.config.setAttr('numPoints', self._numPoints)
 
-	def numTraces(self, update=False):
+	def numTraces(self, update=True):
 		if update:
 			self.updateConfigData()
 		return self._numTraces
@@ -104,18 +122,16 @@ class TraceContainerSQLite(TraceContainer):
 		self.updateConfigData()
 
 	def formatWave(self, wave, read=False):
-		#		if self.findParam(["SQLite Configuration","format"]).getValue() == "NumPy JSON":
-			if read == False:
-				return json.dumps(wave.tolist())
-			else:
-				return np.array(json.loads(wave))
-					#	else:
-#			raise AttributeError("Invalid Format for SQLite")
+		
+		if read == False:
+			return json.dumps(wave.tolist())
+		else:
+			return np.array(json.loads(wave))
 
 	def addTrace(self, trace, attackvars, dtype=np.double,channelNum=None):
 		jattackvars = json.dumps(attackvars)
 		cx = self.db.cursor()
-		cx.execute("INSERT INTO cwtraces (trace_data, trace) VALUES(?, ?);",( jattackvars ,self.formatWave(trace)))
+		cx.execute("INSERT INTO cwtraces_%d (trace_data, trace) VALUES(?, ?);"  % self.setid ,( jattackvars ,self.formatWave(trace)))
 		self.db.commit()
 
 	def saveAll(self):
@@ -128,29 +144,18 @@ class TraceContainerSQLite(TraceContainer):
 		self.config.saveTrace()
 
 	def closeAll(self, clearTrace=True, clearText=True, clearKeys=True):
-		# self.saveAllTraces(os.path.dirname(self.config.configFilename()), prefix=self.config.attr("prefix"))
-
-		# Release memory associated with data in case this isn't deleted
-	#        if clearTrace:
-	#            self.traces = None
-	#
-	#        if clearText:
-	#            self.textins = None
-	#            self.textouts = None
-	#
-	#        if clearKeys:
-	#            self.keylist = None
-	#            self.knownkey = None
-
 		if self.db is not None:
 			self.db.close()
 		
 		self.db = None
 
 	def getTrace(self, n):
+		if self.db == None:
+			self.con()
+		
 		cx = self.db.cursor()
-		cx.execute("SELECT trace FROM cwtraces order by trace_id LIMIT 1 OFFSET %d", ( n))
-		wv = cx.fetchone()
+		cx.execute("SELECT trace FROM cwtraces_%d order by trace_id LIMIT 1 OFFSET ?" % self.setid , (n,))
+		wv = cx.fetchone()[0]
 		return self.formatWave(wv, read=True)
 
 	def asc2list(self, asc):
@@ -160,10 +165,12 @@ class TraceContainerSQLite(TraceContainer):
 		return lst
 
 	def getWaveVars(self,n):
+		if self.db == None:
+			self.con()
 		cx = self.db.cursor()
-		cx.execute("SELECT trace_data FROM cwtraces order by trace_id LIMIT 1 OFFSET %d",( n))
-		wv = cx.fetchone()
-		return json.loads()
+		cx.execute("SELECT trace_data FROM cwtraces_%d order by trace_id LIMIT 1 OFFSET ?" % self.setid ,( n,))
+		wv = cx.fetchone()[0]
+		return json.loads(wv)
 
 	def getTextin(self, n): #legacy
 		return self.getWaveVars()['Textin']

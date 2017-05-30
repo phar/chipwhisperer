@@ -112,8 +112,8 @@ class ProjectFormat(object):
         return self.filename
 
     def setFilename(self, f):
-        self.filename = f
-        self.config.filename = f        
+        self.filename = str(f)
+        self.config.filename = str(f)
         self.datadirectory = os.path.splitext(self.filename)[0] + "_data/"
         self.createDataDirectory()
         self.sigStatusChanged.emit()

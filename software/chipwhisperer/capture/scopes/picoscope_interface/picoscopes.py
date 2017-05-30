@@ -36,10 +36,17 @@ This module has an interface to the PicoTech PicoScope device. It uses the
 picoscope library at https://github.com/colinoflynn/pico-python which you
 must install
 """
-from picoscope import ps2000
-from picoscope import ps5000a
-from picoscope import ps6000
-
+try:
+	from picoscope import ps2000
+	from picoscope import ps5000a
+	from picoscope import ps6000
+except ImportError, e:
+	print "************************************************************"
+	print "picoscope python modules required for instrument support"
+	print "https://pypi.python.org/pypi/picoscope"
+	print ""
+	print "************************************************************"
+	raise ImportError(e)
 
 class PicoScopeBase(Parameterized):
     _name = 'Pico Scope'
