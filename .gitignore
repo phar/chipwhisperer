@@ -22,4 +22,4 @@ default-data-dir/
 *.lst
 *.npy
 README.md
-.DS_Store
+*.DS_Store
