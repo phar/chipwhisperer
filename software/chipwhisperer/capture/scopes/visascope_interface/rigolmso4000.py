@@ -2,6 +2,7 @@ import logging
 import time
 from _base import VisaScope
 import struct
+import numpy
 
 class VisaScopeInterface_RIGOLDS4000(VisaScope):
 	_name = "Rigol DS4000"
@@ -20,29 +21,9 @@ class VisaScopeInterface_RIGOLDS4000(VisaScope):
 		self.YOffset = 0
 		self.XOffset = 0
 		self.header = []
-
-		self._channels = ["CHANnel1","CHANnel2","CHANnel3","CHANnel4"]
+		self.chanalias = self.getChannel()
+		self._channels = {"CHANnel1","CHANnel2","CHANnel3","CHANnel4"}
 		self._triggers = ["CHANnel1","CHANnel2","CHANnel3","CHANnel4","EXT","EXT5","ACLine"]
-
-
-		"""
-			 ":CHANnel1:PROBe 1X",
-			   ":CHANnel1:DISPlay ON",
-			   ":CHANnel1:COUPling DC",
-			   ":CHANnel2:PROBe 10X",
-			   ":CHANnel2:SCALe 1",
-			   ":CHANnel2:OFFSet 0",
-			   ":CHANnel2:DISPLay ON",
-			   ":TRIGger:MODE EDGE",
-			   ":TRIGger:EDGE:SOURce CHANnel2",
-			   ":TRIGger:EDGE:SLOPe NEGative",
-			   ":TRIGger:EDGE:LEVel 2.0",
-			   ":TRIGger:EDGE:SWEep NORMal",
-			   ":WAVeform:SOURce CHANnel1",
-			   ":WAVeform:FORMat WORD",
-			   ]
-			   """
-		
 		super(self.__class__, self).__init__()
 
 
@@ -89,14 +70,10 @@ class VisaScopeInterface_RIGOLDS4000(VisaScope):
 
 		self.visaInst.write( ":WAVeform:DATA?")
 		d =  self.visa_read_tekformat(format="h");
-		self.datapoints = d
-
-#		self.visaInst.write( ":WAVeform:DATA?")
-#		d =  self.visa_read_tekformat(format="h");
-#		self.datapoints += d
+		self.datapoints = numpy.array(d)
 
 		channelnum = 0
-		
+		logging.info(self.datapoints)
 		self.dataUpdated.emit(channelnum, self.datapoints, 0, self.SampSs)
 		return False
 

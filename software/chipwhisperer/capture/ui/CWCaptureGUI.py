@@ -299,7 +299,9 @@ class CWCaptureGUI(CWMainGUI):
             raise Warning("You have a stage selected but not connected.")
         if self.api.getGlitcher() and not self.api.getGlitcher().getStatus():
             raise Warning("You have a glitcher selected but not connected.")
-	
+        if self.api.project().config[self.api.__name__]['General Settings']['Project Name'] == 'Untitled':
+            raise Warning("you need to create a project before capturing a traceset")
+		
         try:
             self.stopCaptureMAct.setEnabled(True)
             self.capturingProgressBar = ProgressBar("Capture in Progress", "Capturing:")

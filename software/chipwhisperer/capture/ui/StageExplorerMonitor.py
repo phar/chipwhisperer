@@ -130,39 +130,42 @@ class StageExplorerMonitor(QtFixes.QDialog):
 		ym = None
 		s = tm.getSegment(0)
 		for i in xrange(s.numTraces()):
-			var = s.getWaveVars(i)
-			#calculate an FFT based on the trace
-			t = s.getTrace(i)
-			f = numpy.fft.fft(t)
-			xf = np.linspace(60.0, 1.0/(2.0*(1.0/tm.getSampleRate())), tm.numPoints()//2)
-			yf = 2.0/tm.numPoints() * np.abs(f[0:tm.numPoints()//2])
-			#interpolate the FFT along the frequency spectrum so that we can request
-			#a quantity at arbitrary frequencies
-			interp = interp1d(xf,yf)
-			
-			if var['x'] < xm or xm == None:
-				xm = var['x']
-			if var['y'] < ym or ym == None:
-				ym = var['y']
-			
-			if var['x'] > xM or xM == None:
-				xM = var['x']
-			if var['y'] > yM or yM == None:
-				yM = var['y']
-			#store the point into a list, this list may be sparse, but is ulitmatly based on stage coordinates
-			self.xpoints.append(var['x'])
-			self.ypoints.append(var['y'])
-			self.data_points.append((var['x'],var['y']))
-			self.data_values.append(float(interp(self.freqspin.value())))
-		
-		#take the traces and create a 2d interpolation based on those points
-		spa = self.capturegui.api.getStage().params.getChild("Samples Per Axis").getValue()
-		xi, yi = np.linspace(xm, xM, spa), np.linspace(ym, yM, spa)
-		f = scipy.interpolate.interp2d(self.xpoints, self.ypoints, self.data_values, kind='linear')
-		ax = self.figure.add_subplot(111)
-		ax.pcolormesh(xi, yi, f(xi, yi))
-		self.canvas.draw()
-
+			if 'x' in var and 'y' in var:
+				var = s.getWaveVars(i)
+				#calculate an FFT based on the trace
+				t = s.getTrace(i)
+				f = numpy.fft.fft(t)
+				xf = np.linspace(60.0, 1.0/(2.0*(1.0/tm.getSampleRate())), tm.numPoints()//2)
+				yf = 2.0/tm.numPoints() * np.abs(f[0:tm.numPoints()//2])
+				#interpolate the FFT along the frequency spectrum so that we can request
+				#a quantity at arbitrary frequencies
+				interp = interp1d(xf,yf)
+				
+				if var['x'] < xm or xm == None:
+					xm = var['x']
+				if var['y'] < ym or ym == None:
+					ym = var['y']
+				
+				if var['x'] > xM or xM == None:
+					xM = var['x']
+				if var['y'] > yM or yM == None:
+					yM = var['y']
+				#store the point into a list, this list may be sparse, but is ulitmatly based on stage coordinates
+				self.xpoints.append(var['x'])
+				self.ypoints.append(var['y'])
+				self.data_points.append((var['x'],var['y']))
+				self.data_values.append(float(interp(self.freqspin.value())))
+	
+		if xm != None and xM != None and ym != None and yM != None:
+			#take the traces and create a 2d interpolation based on those points
+			spa = self.capturegui.api.getStage().params.getChild("Samples Per Axis").getValue()
+			xi, yi = np.linspace(xm, xM, spa), np.linspace(ym, yM, spa)
+			f = scipy.interpolate.interp2d(self.xpoints, self.ypoints, self.data_values, kind='linear')
+			ax = self.figure.add_subplot(111)
+			ax.pcolormesh(xi, yi, f(xi, yi))
+			self.canvas.draw()
+		else:
+			raise Warning("there are no coordinates on the existing traceset")
 
 
 

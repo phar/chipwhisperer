@@ -36,20 +36,8 @@ class VisaScope(Parameterized,Plugin):
 	_triggers = ["None"]
 	_channel = None
 	
-	def __init__(self):
-		
+	def __init__(self):		
 		self.dataUpdated = util.Signal()
-		self.getParams().addChildren([
-			{'name':'Channel','key':'chan','type':'list', 'values':self._channels, 'get':self.getChannel, 'set':self.setChannel},
-		])
-	
-		self.newScan()
-
-	def getChannel(self):
-		return self._channel
-	
-	def setChannel(self,channel,blockSignal=None):
-		self._channel = channel
 
 	def con(self, constr):
 		logging.info(self.visaInst.ask("*IDN?"))
@@ -65,7 +53,7 @@ class VisaScope(Parameterized,Plugin):
 	
 	def updateCurrentSettings(self):
 		self.currentSettings()
-		self.findParam('xscale').setValue(self.XScale)
+		#		self.findParam('xscale').setValue(self.XScale)
 		self.findParam('yscale').setValue(self.YScale)
 		self.findParam('xoffset').setValue(self.XOffset)
 		self.findParam('yoffset').setValue(self.YOffset)

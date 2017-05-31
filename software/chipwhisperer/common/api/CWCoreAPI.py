@@ -262,7 +262,7 @@ class CWCoreAPI(Parameterized):
         self.project().setProgramName(self.__name__)
         self.project().setProgramVersion(self.__version__)
         print self.project().datadirectory
-        self.params.load(os.path.join(self.project().datadirectory, "settings.cwset"))
+        #self.params.load(os.path.join(self.project().datadirectory, "settings.cwset"))
 
     def openProject(self, fname):
         """Open project file"""
