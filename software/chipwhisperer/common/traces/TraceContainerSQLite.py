@@ -25,13 +25,15 @@ class TraceContainerSQLite(TraceContainer):
 		self.openMode = openMode
 		self.fmt = None
 		self.setid = None
-			#	self.getParams().addChildren([{'name':'SQLite Configuration', 'type':'group', 'children':[
-	#                       {'name':'Table Name', 'key':'tableName', 'type':'str', 'value':'CWTable1', 'readonly':True}
-	#			  ]}])
+		self.traceParams = [{'name':'SQLite Configuration', 'type':'group', 'children':[
+					   {'name':'Table Name', 'key':'tableName', 'type':'str', 'value':'', 'readonly':True}
+					]}]
+		self.getParams().addChildren(self.traceParams)
+		self.attrDict = makeAttrDict("SQLite Config", "sqlite", self.traceParams)
 
 		#Format name must agree with names from TraceContainerFormatList
-		self.config.setAttr("format", "sqlite")
-		
+		#self.config.setAttr("format", "sqlite")
+
 
 	def setDirectory(self, directory):
 		self.dir = directory
@@ -55,15 +57,13 @@ class TraceContainerSQLite(TraceContainer):
 		self.con()
 	
 	def prepareDB(self):
-		self.db.execute("create table IF NOT EXISTS cwtraces_%d (trace_id integer PRIMARY KEY AUTOINCREMENT,trace   text, trace_data text,  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP);" % self.setid )
+		self.db.execute("create table IF NOT EXISTS cwtraces_%d (trace_id integer PRIMARY KEY AUTOINCREMENT,trace   text, trace_data text, channel text,  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP);" % self.setid )
 
 	def con(self):
 		logging.info(dir(self))
 		logging.info(dir(self.config))
 		logging.info(self.configfile)
-		self.dbfile = CWCoreAPI.getInstance().project().getDataFilepath("traces.sqlite3")["abs"]
-		logging.info(CWCoreAPI.getInstance().project())
-
+		self.dbfile =  CWCoreAPI.getInstance().project().getDataFilepath("traces.sqlite3","traces")["abs"]
 
 		logging.info("waveform database %s" % self.dbfile)
 		self.db = sqlite3.connect(self.dbfile) #fixme.. in project directory!
@@ -87,6 +87,9 @@ class TraceContainerSQLite(TraceContainer):
 		self._numPoints = self.formatWave(wav, read=True).shape[0]
 
 	def updateConfigData(self):
+		if self.db == None:
+			self.con()
+		logging.info(self.db)
 		if self.db != None:
 			cx = self.db.cursor()
 			cx.execute("SELECT COUNT(*) FROM cwtraces_%d" % self.setid )
@@ -116,7 +119,6 @@ class TraceContainerSQLite(TraceContainer):
 				self.getParams.findParam(p["key"]).setValue(val)
 			except ValueError:
 				pass
-			#print "%s to %s=%s"%(p["key"], val, self.getParams.findParam(p["key"]).getValue())
 
 	def loadAllTraces(self, path=None, prefix=None):
 		self.updateConfigData()
@@ -128,22 +130,26 @@ class TraceContainerSQLite(TraceContainer):
 		else:
 			return np.array(json.loads(wave))
 
-	def addTrace(self, trace, attackvars, dtype=np.double,channelNum=None):
-		jattackvars = json.dumps(attackvars)
+	def addTrace(self, channel, attackvars, dtype=np.double):
 		cx = self.db.cursor()
-		cx.execute("INSERT INTO cwtraces_%d (trace_data, trace) VALUES(?, ?);"  % self.setid ,( jattackvars ,self.formatWave(trace)))
+		cx.execute("INSERT INTO cwtraces_%d (trace_data, trace, channel) VALUES(?, ?, ?);"  % self.setid ,(json.dumps(attackvars),self.formatWave(channel.getTrace()), channel.name))
 		self.db.commit()
 
 	def saveAll(self):
 		#Save attributes from config settings
-		for t in self.getParams.traceParams[0]['children']:
-			self.config.setAttr(t["key"],  self.getParams.findParam(t["key"]).getValue() ,"sqlite")
+		#for t in self.getParams.traceParams[0]['children']:
+		#	self.config.setAttr(t["key"],  self.getParams.findParam(t["key"]).getValue() ,"sqlite")
 
 		#Save table name/prefix too
-		self.config.setAttr("tableName", self.tableName, "sqlite")
+		self.config.attrList.append(self.attrDict)
+
+		self.config.setAttr("tableName", "cwtraces_%d" % self.setid, "sqlite")
+		self.config.setAttr("format", "sqlite")
+
 		self.config.saveTrace()
 
 	def closeAll(self, clearTrace=True, clearText=True, clearKeys=True):
+		self.saveAll()
 		if self.db is not None:
 			self.db.close()
 		

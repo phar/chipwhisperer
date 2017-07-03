@@ -108,7 +108,7 @@ class TraceContainerConfig(object):
                     "scopeSampleRate":{"order":8, "value":0, "desc":"Sample Rate (s/sec)", "changed":False, "headerLabel":"Sample Rate", "editable":True},
                     "scopeYUnits":{"order":9, "value":0, "desc":"Units of Y Points", "changed":False, "editable":True},
                     "scopeXUnits":{"order":10, "value":0, "desc":"Units of X Points", "changed":False, "editable":True},
-                    "notes":{"order":11, "value":"", "desc":"Additional Notes about Capture Setup", "changed":False, "headerLabel":"Notes", "editable":True}                
+                    "notes":{"order":11, "value":"", "desc":"Additional Notes about Capture Setup", "changed":False, "headerLabel":"Notes", "editable":True} ,                    "tableName":{"order":12, "value":"", "desc":"SQL table name if used", "changed":False, "headerLabel":"TableName", "editable":True}
                     },
                 }
     

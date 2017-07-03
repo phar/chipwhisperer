@@ -440,16 +440,16 @@ class CWMainGUI(QMainWindow):
             self.openProject(action.data())
             self.reloadSettings()
 
-    def openProject(self, fname = None):
+    def openProject(self,bool, fname = None):
         if not self.okToContinue():
             return
         if fname is None:
-            fname, _ = QFileDialog.getOpenFileName(self, 'Open File', self.api.settings.value("project-home-dir"),
+            fname = QFileDialog.getOpenFileName(self, 'Open File', self.api.settings.value("project-home-dir"),
                                                    'ChipWhisperer Project (*.cwp)','', QFileDialog.DontUseNativeDialog)
             if not fname: return
 
         logging.info("Opening Project: " + fname)
-        self.api.openProject(fname)
+        self.api.openProject(fname=fname)
 
     def saveProject(self):
         fname = self.api.project().getFilename()

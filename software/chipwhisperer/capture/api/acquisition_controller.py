@@ -50,8 +50,8 @@ class AcquisitionController:
 		self.keyTextPattern = self.api.getAcqPattern()
 		self.writer = self.api.getTraceFormat()
 		
-		if self.target != None:
-			self.keyTextPattern.setTarget(target)
+		if self.target != None and self.keyTextPattern != None:
+			self.keyTextPattern.setTarget(self.target)
 
 		if self.keyTextPattern != None:
 			self.attackvars.update(self.keyTextPattern.initAttackVars().copy())
@@ -64,21 +64,24 @@ class AcquisitionController:
 
 	def SetupNewTrace(self):
 		"""Return a new trace object for the specified format."""
-		if self.format is None:
-			raise Warning("No trace format selected.")
-		self.writer = copy.copy(self.format)
-		self.writer.clear()
-		starttime = datetime.now()
-		self.writer.config.setConfigFilename(self.api.getInstance().project().datadirectory + "traces/config_" + self.prefix + ".cfg") #fixme, I dont know what this does
-		self.writer.config.setAttr("prefix", self.prefix)
-		self.writer.config.setAttr("date", starttime.strftime('%Y-%m-%d %H:%M:%S'))
+			#		if self.format is None:
+			#			raise Warning("No trace format selected.")
+		if self.format != None:
+			self.writer = copy.copy(self.format)
+			self.writer.clear()
+			starttime = datetime.now()
+			self.writer.config.setConfigFilename(self.api.getInstance().project().datadirectory + "traces/config_" + self.prefix + ".cfg") #fixme, I dont know what this does
+			self.writer.config.setAttr("prefix", self.prefix)
+			self.writer.config.setAttr("date", starttime.strftime('%Y-%m-%d %H:%M:%S'))
 
 
 	def targetDoTrace(self):
 		if self.target is None or self.target.getName() == "None":
 			return []
 
-		self.target.go()
+		if "go" in self.target.script_states:
+			self.target.run_expect_state("go")
+		
 		timeout = 50
 		while self.target.isDone() is False and timeout:
 			timeout -= 1
@@ -87,18 +90,20 @@ class AcquisitionController:
 		if timeout == 0:
 			logging.warning('Target timeout')
 
-		textout = self.target.readOutput()
+#		textout = self.target.readOutput()
+		if "final" in self.target.script_states:
+			textout = self.target.run_expect_state("final")
 		
-		try:
-			logging.debug("PlainText: " + ''.join(format(x, '02x') for x in self.attackvars["textin"]))
-		except:
-			pass
+#		try:
+#			logging.debug("PlainText: " + ''.join(format(x, '02x') for x in self.attackvars["textin"]))
+#		except:
+#			pass
+#
+#		try:
+#			logging.debug("CipherText: " + ''.join(format(x, '02x') for x in self.attackvars["textout"]))
+#		except:
+#			pass
 
-		try:
-			logging.debug("CipherText: " + ''.join(format(x, '02x') for x in self.attackvars["textout"]))
-		except:
-			pass
-			
 		return textout
 
 	def doSingleReading(self):
@@ -132,18 +137,24 @@ class AcquisitionController:
 			for aux in self.auxList:
 				if aux:
 					aux.traceArmPost()
+		
+		if  self.keyTextPattern != None:
+			self.attackvars.update(self.keyTextPattern.nextAttackVars().copy())
 
 		if self.target:
 			# Get key / plaintext now
-			self.attackvars.update(self.keyTextPattern.nextAttackVars().copy())
+			if "init" in self.target.script_states:
+				self.target.run_expect_state("init")
 
-			self.target.setModeEncrypt()
-			self.target.loadEncryptionKey(self.attackvars["key"])
-			self.target.loadInput(self.attackvars["textin"])
+			if "configure" in self.target.script_states:
+				self.target.run_expect_state("configure")
+				
 			# Load input, start encryption, get output
 			self.attackvars["textout"] = self.targetDoTrace() #does this generate textout?
+		
+			self.sigNewTextResponse.emit(self.attackvars)
 
-			self.sigNewTextResponse.emit(self.attackvars, self.target.getExpected())
+		logging.info(self.attackvars)
 
 		# Get ADC reading
 		if self.scope:
@@ -165,10 +176,10 @@ class AcquisitionController:
 	def setMaxtraces(self, maxtraces):
 		self.maxtraces = maxtraces
 
-	def doReadings(self, channelNumbers=None, tracesDestination=None, progressBar=None):
-		if channelNumbers is None:
-			channelNumbers = [0]
-
+	def doReadings(self, tracesDestination=None, progressBar=None):
+		if self.format is None:
+			raise Warning("No trace format selected.")
+		
 		if self.keyTextPattern:
 			self.keyTextPattern.initAttackVars()
 
@@ -192,15 +203,10 @@ class AcquisitionController:
 			if self.doSingleReading():
 				try:
 					if self.writer:
-						if "key" in self.attackvars:
-							self.writer.setKnownKey(self.attackvars["key"])
-						
-						for channelNum in channelNumbers:
-							if self.scope != None:
-								trace = self.scope.channels[channelNum].getTrace()
-							else:
-								trace = [0]
-							self.writer.addTrace(trace, self.attackvars, channelNum=channelNum)
+						if self.scope != None:
+							for (name,channel) in self.scope.scopechannels.items():
+								if channel:
+									self.writer.addTrace(channel, self.attackvars)
 		
 				except ValueError as e:
 					logging.warning('Exception caught in adding trace %d, trace skipped.' % self.currentTrace)
@@ -221,9 +227,9 @@ class AcquisitionController:
 				if aux:
 					aux.captureComplete()
 
-		if self.writer and self.writer.numTraces() > 0:
+		if self.writer != None and self.scope != None:
 			# Don't clear trace as we re-use the buffer
-			self.writer.config.setAttr("scopeSampleRate", self.scope.channels[channelNumbers[0]].getSampleRate())
+			self.writer.config.setAttr("scopeSampleRate", self.scope.getSampleRate())
 			self.writer.closeAll(clearTrace=False)
 			if tracesDestination:
 				tracesDestination.appendSegment(self.writer)

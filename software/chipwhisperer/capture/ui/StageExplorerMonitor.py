@@ -16,12 +16,13 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.backends.backend_qt4agg import (
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
+from matplotlib import gridspec
+
 
 import scipy
 import matplotlib.pyplot as plt
 
-FREQ_MIN = 60
-FREQ_MAX = 500
+
 
 class StageExplorerMonitor(QtFixes.QDialog):
 	def __init__(self, parent):
@@ -41,11 +42,7 @@ class StageExplorerMonitor(QtFixes.QDialog):
 		self.toolbar = NavigationToolbar(self.canvas, self)
 
 		self.freqslider = QtGui.QSlider(Qt.Horizontal)
-		self.freqslider.setMinimum(FREQ_MIN)
-		self.freqslider.setMaximum(FREQ_MAX)
 		self.freqspin = QtGui.QDoubleSpinBox()
-		self.freqspin.setMinimum(FREQ_MIN)
-		self.freqspin.setMaximum(FREQ_MAX)
 		QObject.connect(self.freqslider, SIGNAL('valueChanged(int)'),self.updateSlider)
 		self.l1 = QLabel()
 	
@@ -99,14 +96,15 @@ class StageExplorerMonitor(QtFixes.QDialog):
 
 
 	def onclick(self,event):
-		if event:
-			print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f' % (event.button, event.x, event.y, event.xdata, event.ydata))
-	
-		if self.capturegui.api.getStage():
-			stage = self.capturegui.api.getStage()
-			stage.enableStageMotors()
-			stage.setCurrentCoord((event.x, event.y))
-			stage.disableStageMotors()
+		try:
+			if event:
+				print('button=%d, x=%d, y=%d, xdata=%f, ydata=%f' % (event.button, event.x, event.y, event.xdata, event.ydata))
+		except TypeError:
+			if self.capturegui.api.getStage():
+				stage = self.capturegui.api.getStage()
+				stage.enableStageMotors()
+				stage.setCurrentCoord((event.x, event.y))
+				stage.disableStageMotors()
 
 	def updateBox(self):
 		self.freqslider.setValue(self.freqspin.value())
@@ -120,7 +118,6 @@ class StageExplorerMonitor(QtFixes.QDialog):
 
 	def plot(self):
 		tm = self.capturegui.api.project().traceManager()
-		self.data_points = []
 		self.xpoints = []
 		self.ypoints = []
 		self.data_values = []
@@ -129,13 +126,22 @@ class StageExplorerMonitor(QtFixes.QDialog):
 		yM = None
 		ym = None
 		s = tm.getSegment(0)
+		grouptrace = None
+		
+		xf = np.linspace(0, 1.0/(2.0*(1.0 / tm.getSampleRate())), tm.numPoints()//2)
+
 		for i in xrange(s.numTraces()):
+			var = s.getWaveVars(i)
 			if 'x' in var and 'y' in var:
-				var = s.getWaveVars(i)
-				#calculate an FFT based on the trace
 				t = s.getTrace(i)
+				#calculate an FFT based on the trace
 				f = numpy.fft.fft(t)
-				xf = np.linspace(60.0, 1.0/(2.0*(1.0/tm.getSampleRate())), tm.numPoints()//2)
+				
+				if grouptrace == None:
+					grouptrace = t
+				else:
+					grouptrace = (grouptrace + t)/2.0
+				
 				yf = 2.0/tm.numPoints() * np.abs(f[0:tm.numPoints()//2])
 				#interpolate the FFT along the frequency spectrum so that we can request
 				#a quantity at arbitrary frequencies
@@ -150,19 +156,42 @@ class StageExplorerMonitor(QtFixes.QDialog):
 					xM = var['x']
 				if var['y'] > yM or yM == None:
 					yM = var['y']
+				
 				#store the point into a list, this list may be sparse, but is ulitmatly based on stage coordinates
 				self.xpoints.append(var['x'])
 				self.ypoints.append(var['y'])
-				self.data_points.append((var['x'],var['y']))
+				
 				self.data_values.append(float(interp(self.freqspin.value())))
 	
 		if xm != None and xM != None and ym != None and yM != None:
 			#take the traces and create a 2d interpolation based on those points
 			spa = self.capturegui.api.getStage().params.getChild("Samples Per Axis").getValue()
 			xi, yi = np.linspace(xm, xM, spa), np.linspace(ym, yM, spa)
+			
 			f = scipy.interpolate.interp2d(self.xpoints, self.ypoints, self.data_values, kind='linear')
-			ax = self.figure.add_subplot(111)
-			ax.pcolormesh(xi, yi, f(xi, yi))
+
+			#fig = plt.figure(figsize=(8, 6))
+			gs = gridspec.GridSpec(2, 1, height_ratios=[5,1])
+			ax0 = plt.subplot(gs[0])
+			ax0.pcolormesh(xi, yi, f(xi, yi))
+			ax0.set_aspect(1./ax0.get_data_ratio())
+			ax0.set_title("Scan Heatmap at frequency")
+
+
+			yf = numpy.fft.fft(grouptrace)
+			#xf = np.linspace(0.0, 1.0/(2.0*(1.0 / tm.getSampleRate())), tm.numPoints()/2)
+			ax1 = plt.subplot(gs[1])
+			ax1.axvline(self.freqspin.value(), color='red', linestyle='-')
+			ax1.plot(xf, 2.0/tm.numPoints() * np.abs(yf[:tm.numPoints()//2]))
+			ax1.set_title("Combined FFT")
+			plt.tight_layout()
+			
+			self.freqspin.setMinimum(xf[1])
+			self.freqspin.setMaximum(xf[-1])
+			self.freqslider.setMinimum(xf[1])
+			self.freqslider.setMaximum(xf[-1])
+			
+
 			self.canvas.draw()
 		else:
 			raise Warning("there are no coordinates on the existing traceset")

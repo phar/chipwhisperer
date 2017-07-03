@@ -25,19 +25,21 @@ import struct
 from chipwhisperer.common.utils.pluginmanager import Plugin
 from chipwhisperer.common.utils.parameter import Parameterized, Parameter
 from chipwhisperer.common.utils import util
+from chipwhisperer.common.utils.tracesource import TraceSource
 
 
 class VisaScope(Parameterized,Plugin):
 	_name= 'Scope Settings'
+	
+	def __init__(self):
+	#		self.getParams().register()
+		self.header = []
+		self._channels = ["Channel 1"]
+		self._triggers = ["Channel 1"]
+	
+		self._channel = self._channels[0]
+		self._trigger = self._triggers[0]
 
-	header = ""
-	
-	_channels = ["None"]
-	_triggers = ["None"]
-	_channel = None
-	
-	def __init__(self):		
-		self.dataUpdated = util.Signal()
 
 	def con(self, constr):
 		logging.info(self.visaInst.ask("*IDN?"))
@@ -46,31 +48,25 @@ class VisaScope(Parameterized,Plugin):
 			self.visaInst.write(cmd)
 			logging.info('VISA: %s' % cmd)
 			time.sleep(0.1)
-		self.updateCurrentSettings()
-		
+
 	def dis(self):
 		pass
 	
 	def updateCurrentSettings(self):
-		self.currentSettings()
-		#		self.findParam('xscale').setValue(self.XScale)
-		self.findParam('yscale').setValue(self.YScale)
-		self.findParam('xoffset').setValue(self.XOffset)
-		self.findParam('yoffset').setValue(self.YOffset)
-		self.findParam('sampsper').setValue(self.SampSs)
-		pass
+		#		raise Warning("must implement updateCurrentSettings")
+		pass  #fixme
 
 	def currentSettings(self):
-		"""You MUST implement this"""
-		pass
+		#raise Warning("You MUST implement this")
+		pass #fixme
 
 	def arm(self):
 		"""Example arm implementation works on most"""
 		#self.visaInst.write(":DIGitize")
 
 	def capture(self):
-		"""You MUST implement this"""
-		self.dataUpdated.emit(self.datapoints, 0)
+		raise Warning("You MUST implement capture")
+	
 
 	def support(self):
 		return []
@@ -100,9 +96,55 @@ class VisaScope(Parameterized,Plugin):
 
 		return datapoints
 
-	def updateChannels(self):
-		return self._channels
+	def getChannel(self):
+		return self._channel
 	
-	def updateTriggers(self):
-		return self._triggers
+	def setChannel(self,chan, blockSignal=None):
+		self._channel = chan
 
+	def getTrigger(self):
+		return self._trigger
+	
+	def setTrigger(self,trig, blockSignal=None):
+		self._trigger = trig
+
+
+
+class Channel(TraceSource):
+	"""Save the traces emited by the scopes and notify the TraceSourceObservers."""
+	
+	def __init__(self, name="Unknown Channel"):
+		TraceSource.__init__(self, name)
+		self._lastData = []
+		self._lastOffset = 0
+		self._sampleRate = 0
+	
+	def newScopeData(self, data=None, offset=0, sampleRate=0):
+		"""Capture the received trace and emit a signal to inform the observers"""
+		self._lastData = data
+		self._lastOffset = offset
+		self._sampleRate = sampleRate
+		if len(data) > 0:
+			self.sigTracesChanged.emit()
+		else:
+			logging.warning('Captured trace in "%s" has len=0' % self.name)
+
+	def getTrace(self, n=0):
+		if n != 0:
+			raise ValueError("Live trace source has no buffer, so it only supports trace 0.")
+			return self._lastData
+
+		def numPoints(self):
+			return len(self._lastData)
+
+	def numTraces(self):
+		return 1
+		
+	def offset(self):
+		return self._lastOffset
+	
+	def getSampleRate(self):
+		return self._sampleRate
+	
+	def __str__(self):
+		return self.name

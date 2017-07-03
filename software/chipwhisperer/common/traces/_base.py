@@ -94,10 +94,10 @@ class TraceContainer(Parameterized, Plugin):
 			self._numTraces = max(cfint, self._numTraces)
 		return self._numTraces
 
-	def addTrace(self, trace, attackvars, dtype=np.double,channelNum=None):
+	def addTrace(self, trace, attackvars, dtype=np.double,channel=None):
 	#def addTrace(self, trace, textin, textout, key, dtype=np.double, channelNum=0):
-		if channelNum!=0:
-			raise NotImplementedError
+#		if channelNum!=0:
+#			raise NotImplementedError
 		self.addWave(trace, dtype)
 
 		if "textin" in attackvars:

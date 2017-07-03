@@ -1,69 +1,53 @@
 import logging
 import time
-from _base import VisaScope
+from _base import VisaScope, Channel
+from chipwhisperer.common.utils import util
 import struct
+from chipwhisperer.common.utils.parameter import Parameterized, Parameter, setupSetParam
 import numpy
 
 class VisaScopeInterface_RIGOLDS4000(VisaScope):
 	_name = "Rigol DS4000"
 
 	def __init__(self):
-
-		self.xScales = {"500 mS":500E-3, "200 mS":200E-3, "100 mS":100E-3, "50 mS":50E-3,
-				   "20 mS":20E-3, "10 mS":10E-3, "5 mS":5E-3, "2 mS":2E-3, "1 mS":1E-3,
-				   "500 uS":500E-6, "200 uS":200E-6, "100 uS":100E-6, "50 uS":50E-6,
-				   "20 uS":20E-6, "10 uS":10E-6, "5 uS":5E-6, "2uS":2E-6, "1 uS":1E-6}
-
-		self.yScales = {"10 V":10, "5 V":5, "2 V":2, "500 mV":500E-3, "200 mV":200E-3, "100 mV":100E-3,
-				   "50 mV":50E-3, "20 mV":20E-3, "10 mV":10E-3, "5 mV":5E-3}
-
-		self.SampSs = 0
-		self.YOffset = 0
-		self.XOffset = 0
-		self.header = []
-		self.chanalias = self.getChannel()
-		self._channels = {"CHANnel1","CHANnel2","CHANnel3","CHANnel4"}
-		self._triggers = ["CHANnel1","CHANnel2","CHANnel3","CHANnel4","EXT","EXT5","ACLine"]
 		super(self.__class__, self).__init__()
+		self._channels = {"Channel 1":"CHANnel1","Channel 2":"CHANnel2","Channel 3":"CHANnel3","Channel 4":"CHANnel4"}
+		self._triggers = {"Channel 1":"CHANnel1","Channel 2":"CHANnel2","Channel 3":"CHANnel3","Channel 4":"CHANnel4","External":"EXT","External5":"EXT5","AC Line":"ACLine"}
+		self.XScale = 0
+		self.YScale = 0
+		self.XOffset = 0
+		self.YOffset = 0
 
 
-	def currentSettings(self):
+	def getSampleRate(self):
+		self.srate = int(float(self.visaInst.query(":ACQuire:SRATe? %s" % self._channels[self._channel])))
+		return self.srate
+
+	def forcetrigger(self):
+		self.visaInst.write(":FORCetrig")
+
+	def getCurrentSettings(self):
 		self.XScale = float(self.visaInst.query(":TIMebase:SCALe?"))
-		logging.info("xscale: %.15f" % self.XScale)
-		#		self.XScale = self.XScale[0]
-		
 		self.XOffset = float(self.visaInst.query(":TIMebase:MAIN:OFFSet?"))
-		logging.info("xoffset: %.15f" % self.XOffset)
-		#self.XOffset = self.XOffset[0]
-		
-		self.YOffset = float(self.visaInst.query(":CHANnel1:OFFSet?"))
-		logging.info("yoffset: %.15f" % self.YOffset)
-		#self.YOffset = self.YOffset[0]
-		
-		self.YScale = float(self.visaInst.query(":CHANnel1:SCALe?"))
-		logging.info("yscale: %.15f" % self.YScale)
-	
+		self.YScale = float(self.visaInst.query(":%s:SCALe?" % (self._channels[self._channel])))
+		self.YOffset = float(self.visaInst.query(":%s:OFFSet?" % (self._channels[self._channel])))
 		self.SampSs = 1.0/self.XScale
-		logging.info("srate %f" % self.SampSs)
-	#self.YScale = self.YScale[0]
+		return(self.XScale,self.XOffset,self.YScale,self.YOffset,self.SampSs)
 
 	def arm(self):
 		self.visaInst.write(":WAVeform:MODE NORmal")
 		self.visaInst.write(":WAVeform:FORMat WORD")
+		self.visaInst.write(":TRIGger:EDGe:SOURce %s"  % (self._triggers[self._trigger]))
+		self.visaInst.write(":WAVeform:SOURce %s"  % (self._channels[self._channel]))
 		self.visaInst.write(":SINGle")
 
-
 	def capture(self):
-		#we're waiting on the trigger here
-		time.sleep(1)
-		
-		state = str(self.visaInst.query(":TRIGger:STATus?").strip())
-		logging.debug(state)
-		if state  in ["RUN"]:
-			while str(state.strip()) not in ["TD","STOP"]:
-					time.sleep(.5)
-					state = str(self.visaInst.query(":TRIGger:STATus?").strip())
-					logging.debug(state)
+		state = str(self.visaInst.query(":TRIGger:STATus?"))
+		while str(state.strip()) not in ["TD","STOP"]:
+				util.updateUI()
+				time.sleep(.5)
+				state = str(self.visaInst.query(":TRIGger:STATus?").strip())
+				logging.debug(state)
 
 		self.visaInst.write(":WAVeform:BEGin")
 		time.sleep(1)
@@ -71,11 +55,30 @@ class VisaScopeInterface_RIGOLDS4000(VisaScope):
 		self.visaInst.write( ":WAVeform:DATA?")
 		d =  self.visa_read_tekformat(format="h");
 		self.datapoints = numpy.array(d)
+		return (self.datapoints, 0, self.SampSs)
 
-		channelnum = 0
-		logging.info(self.datapoints)
-		self.dataUpdated.emit(channelnum, self.datapoints, 0, self.SampSs)
-		return False
+
+	def getMagnitudeScale(self):
+		self.getCurrentSettings()
+		return self.YScale
+	
+	def setMagnitudeScale(self, scale):
+		pass
+	
+	def getMagnitudeOffset(self):
+		self.getCurrentSettings()
+		return self.XScale
+
+	def	setMagnitudeOffset(self, offset):
+		pass
+
+	def getTimeOffset(self):
+		self.getCurrentSettings()
+		return self.XOffset
+	
+	def	setTimeOffset(self, offset):
+		pass
 
 	def support(self):
 		return ["DS4034","DS4054","DS4052","DS4032","DS4024","DS4022","DS4014","DS4012"]
+

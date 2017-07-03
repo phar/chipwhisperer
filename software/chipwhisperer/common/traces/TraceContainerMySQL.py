@@ -52,7 +52,6 @@ class TraceContainerMySQL(TraceContainer):
                         {'name':'Username', 'key':'user', 'type':'str', 'value':'root'},
                         {'name':'Password', 'key':'password', 'type':'str', 'value':'admin'},
                         {'name':'Database', 'key':'database', 'type':'str', 'value':'CWTraces'},
-                        {'name':'Table Name', 'key':'tableName', 'type':'str', 'value':'', 'readonly':True}
                       ]}]
 
         if self.openMode == False:

@@ -80,10 +80,10 @@ class LoggingWidget(QWidget):
         self.setFormat('MESSAGE')
 
     def setFormat(self, format):
-        self.editor.setFormatter(logging.Formatter(self._formats[format]))
+        self.editor.setFormatter(logging.Formatter(self._formats[str(format)]))
 
     def setLevel(self, levelName):
-        logging.getLogger().setLevel(logging._levelNames[levelName])
+        logging.getLogger().setLevel(logging._levelNames[str(levelName)])
 
     def __del__(self):
         logging.getLogger().removeHandler(self.editor)

@@ -30,7 +30,7 @@ from chipwhisperer.common.utils.parameter import setupSetParam
 
 
 class AcqKeyTextPattern_Basic(AcqKeyTextPattern_Base):
-	_name = "Basic"
+	_name = "CW Basic"
 
 	def __init__(self, target=None):
 		AcqKeyTextPattern_Base.__init__(self)
@@ -47,7 +47,6 @@ class AcqKeyTextPattern_Basic(AcqKeyTextPattern_Base):
 		
 		self.getParams().addChildren([
 			{'name':'Key', 'type':'list', 'values':self.types , 'get':self.getKeyType, 'set':self.setKeyType, 'action':lambda p:self.findParam("initkey").show(p.getValue()), 'linked':['initkey']},
-			# {'name':'Size', 'type':'int'},
 			{'name':'Fixed Encryption Key', 'key':'initkey', 'type':'str', 'get':self.getInitialKey, 'set':self.setInitialKey, 'visible':self.getKeyType()},
 			{'name':'Plaintext', 'type':'list', 'values':self.types , 'get':self.getPlainType, 'set':self.setPlainType, 'action':lambda p:self.findParam("inittext").show(p.getValue()), 'linked':['inittext']},
 			{'name':'Fixed Plaintext', 'key':'inittext', 'type':'str', 'get':self.getInitialText, 'set':self.setInitialText, 'visible':self.getPlainType()},

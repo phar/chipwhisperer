@@ -97,28 +97,21 @@ class CWCaptureGUI(CWMainGUI):
         else:
             self.stageStatus.setDefaultAction(self.stageStatusActionDis)
 
-#        if self.api.getScope() and self.api.getTarget() and (self.scopeStatus.defaultAction() == self.scopeStatusActionCon or self.targetStatus.defaultAction() == self.targetStatusActionCon):
-#            self.captureStatus.setDefaultAction(self.captureStatusActionCon)
-#        else:
-#            self.captureStatus.setDefaultAction(self.captureStatusActionDis)
 
     def newTargetData(self, data):
         self.glitchMonitor.addResponse(data)
 
     def addToolMenuItems(self):
-        self.terminalAct = QAction('Terminal', self, statusTip='Open Simple Serial Terminal',
-                                   triggered=self.serialTerminal.show)
+        self.terminalAct = QAction('Terminal', self, statusTip='Open Simple Serial Terminal',triggered=self.serialTerminal.show)
 
         self.toolMenu.addAction(self.terminalAct)
-        self.glitchMonitorAct = QAction('Glitch Explorer', self, statusTip='Open Glitch Explorer Tool',
-                                        triggered=self.glitchMonitor.show)
+        self.glitchMonitorAct = QAction('Glitch Explorer', self, statusTip='Open Glitch Explorer Tool', triggered=self.glitchMonitor.show)
         self.toolMenu.addAction(self.glitchMonitorAct)
 
 
         self.encryptionStatusMonitor = EncryptionStatusMonitor(self)
         self.api.sigNewTextResponse.connect(self.encryptionStatusMonitor.newData)
-        self.encryptionStatusMonitorAct = QAction('Encryption Status Monitor', self, statusTip='Encryption Status Monitor',
-                                        triggered=self.encryptionStatusMonitor.show)
+        self.encryptionStatusMonitorAct = QAction('Encryption Status Monitor', self, statusTip='Encryption Status Monitor', triggered=self.encryptionStatusMonitor.show)
         self.toolMenu.addAction(self.encryptionStatusMonitorAct)
         self.stageExplorerMonitor = StageExplorerMonitor(self)
 
@@ -132,12 +125,6 @@ class CWCaptureGUI(CWMainGUI):
         self.capture1Act = QAction(QIcon(':/images/play1.png'), 'Capture 1', self, triggered=lambda: self.doCapture(self.api.capture1))
         self.captureMAct = QAction(QIcon(':/images/playM.png'), 'Capture M', self, triggered=lambda: self.doCapture(self.captureM))
         self.stopCaptureMAct = QAction(QIcon(':/images/stopM.png'), 'Stop Capture', self, triggered=lambda: self.capturingProgressBar.abort(), enabled=False)
-
-        # Master
-		#        self.captureStatus = QToolButton()
-		#        self.captureStatusActionDis = QAction(QIcon(':/images/status_disconnected.png'), 'Master: Disconnected', self, triggered=self.doConDis)
-		#        self.captureStatusActionCon = QAction(QIcon(':/images/status_connected.png'), 'Master: Connected', self, triggered=self.doConDis)
-		#        self.captureStatus.setDefaultAction(self.captureStatusActionDis)
 
         # Scope
         self.scopeStatus = QToolButton()
@@ -169,8 +156,6 @@ class CWCaptureGUI(CWMainGUI):
         toolbar.addAction(self.captureMAct)
         toolbar.addAction(self.stopCaptureMAct)
         toolbar.addSeparator()
-		#        toolbar.addWidget(QLabel('Master:'))
-		#        toolbar.addWidget(self.captureStatus)
         toolbar.addWidget(QLabel('Scope:'))
         toolbar.addWidget(self.scopeStatus)
         toolbar.addWidget(QLabel('Glitcher:'))
@@ -226,14 +211,6 @@ class CWCaptureGUI(CWMainGUI):
             self.api.disconnectStage()
             logging.info("Stage Disconnected")
 
-#    def doConDis(self):
-#        """Toggle connect button pushed (master): attempts both target & scope connection"""
-#        if self.captureStatus.defaultAction() == self.captureStatusActionDis:
-#            if self.api.connect():
-#                logging.info("Target and Scope Connected")
-#        else:
-#            if self.api.disconnect():
-#                logging.info("Target and Scope Disconnected")
 
     def validateSettings(self, warnOnly=False):
         # Validate settings from all modules before starting multi-api
@@ -299,7 +276,9 @@ class CWCaptureGUI(CWMainGUI):
             raise Warning("You have a stage selected but not connected.")
         if self.api.getGlitcher() and not self.api.getGlitcher().getStatus():
             raise Warning("You have a glitcher selected but not connected.")
-        if self.api.project().config[self.api.__name__]['General Settings']['Project Name'] == 'Untitled':
+		#$logging.info(self.api.project().config)
+		#if self.api.project().config[self.api.__name__]['General Settings']['Project Name'] == 'Untitled':
+        if self.api.project().config == {}:
             raise Warning("you need to create a project before capturing a traceset")
 		
         try:

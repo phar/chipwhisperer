@@ -73,6 +73,7 @@ class StageTemplate(Parameterized, Plugin):
 		self._scandone = 0
 
 	def _nullPath(self):
+		while 1:
 			yield self.getCurrentCoord()
 
 	def newScan(self):
@@ -86,7 +87,7 @@ class StageTemplate(Parameterized, Plugin):
 			raise ValueError("no scan iterator")
 
 	def scanComplete(self):
-		self._scanpathiter = None
+		#self._scanpathiter = None
 		return self._scandone
 
 	def getLatency(self):

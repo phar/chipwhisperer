@@ -26,6 +26,7 @@
 #=================================================
 
 from .base import ScopeTemplate
+from .base import Channel
 from chipwhisperer.common.utils import pluginmanager
 from chipwhisperer.common.utils.parameter import setupSetParam
 from chipwhisperer.common.utils.pluginmanager import Plugin
@@ -45,63 +46,111 @@ class VisaScopeInterface(ScopeTemplate, Plugin):
 	_name = "VISA Scope"
 
 	def __init__(self):
-
-		self.scopes = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.scopes.visascope_interface", True, False)
 		self.scopetype = None
-		logging.info(self.scopes)
-		self._channel = "Channel 1"
-		self._channels = ["Channel 1", "Channel 2", "Channel 3","Channel 4","Channel Aux"]
-		ScopeTemplate.__init__(self)
+		self._channels = ["Channel 1","Channel 2","Channel 3","Channel 4"]
+		self._triggers = ["Channel 1","Channel 2","Channel 3","Channel 4","EXT","EXT5","ACLine"]
+
+		super(self.__class__, self).__init__()
+
+		self.chanobj = Channel(self._name)
+		self.scopechannels[self._name] = self.chanobj
+		
+		self.scopes = pluginmanager.getPluginsInDictFromPackage("chipwhisperer.capture.scopes.visascope_interface", True, False)
+
 		self.params.addChildren([
+			{'name':'Channel', 'key':'chan', 'type':'list', 'values':self._channels, 'get':self.getChannel,'set':self.setChannel},
+			{'name':'Trigger', 'key':'trigger', 'type':'list', 'values':self._triggers, 'get':self.getTrigger,'set':self.setTrigger},
 			{'name':'VISA Resource String', 'key':'connStr', 'type':'str', 'value':'TCPIP::192.168.1.15::INSTR'},
 			{'name':'Identified Instrument','key':'scopeid','type':'str', 'value':'None'},
 			{'name':'Scope Driver','key':'scopedriver','type':'str', 'value':'None'},
 			{'name':'Query Scope', 'key':'qscope', 'type':'action', 'action':self.queryscope},
+			{'name':'Force Trigger', 'key':'trig', 'type':'action', 'action':self.forcetrigger},
 			{'name':'Reset Scope', 'key':'rscope', 'type':'action', 'action':self.resetscope},
 		])
+#		self.getChannels()
 		self.params.init()
-
+	
+	def forcetrigger(self,trig):
+		if self.scopetype:
+			self.scopetype.forcetrigger()
+		else:
+			raise Warning("must implement force trigger")
 
 	def setSampleRate(self, scale,  blockSignal=False):
 		pass
 	
-	def getSampleRate(self):
+	def getChannel(self):
+		if self.scopetype:
+			return self.scopetype.getChannel()
+		return None
+	
+	@setupSetParam("Channel")
+	def setChannel(self, chan, blockSignal=1):
+		if self.scopetype:
+			self.scopetype.setChannel(chan)
 		pass
+
+	def getTrigger(self):
+		if self.scopetype:
+			return self.scopetype.getTrigger()
+		return None
+
+	@setupSetParam("Trigger")
+	def setTrigger(self,trig):
+		if self.scopetype:
+			self.scopetype.setTrigger(trig)
+	
+	def getSampleRate(self):
+		if self.scopetype:
+			return self.scopetype.getSampleRate()
 	
 	def setTimeScale(self, scale):
 		pass
 	
 	def getMagnitudeScale(self):
-		pass
+		if self.scopetype:
+			return self.scopetype.getMagnitudeScale()
 	
-	def setMagnitudeScale(self, scale,  blockSignal=False):
-		pass
+	@setupSetParam("Y-Scale")
+	def setMagnitudeScale(self, scale):
+		if self.scopetype:
+			self.scopetype.setMagnitudeScale(scale)
 	
 	def getMagnitudeOffset(self):
-		pass
+		if self.scopetype:
+			return self.scopetype.getMagnitudeOffset()
 	
-	def	setMagnitudeOffset(self, offset,  blockSignal=False):
-		pass
+	@setupSetParam("Y-Offset")
+	def	setMagnitudeOffset(self, offset):
+		if self.scopetype:
+			return self.scopetype.setMagnitudeOffset(offset)
 	
 	def getTimeOffset(self):
-		pass
-	
-	def setTimeOffset(self, offset,  blockSignal=False):
-		pass
-	
-	def getChannel(self):
-		return self._channel
-	
-	def setChannel(self,chan, blockSignal=None):
-		self._channel = chan
-	
+		if self.scopetype:
+			return self.scopetype.getTimeOffset()
+
+	@setupSetParam("X-Offset")
+	def setTimeOffset(self, offset):
+		if self.scopetype:
+			self.scopetype.setTimeOffset(offset)
+
+	def updateCurrentSettings(self):
+		if self.scopetype:
+			self.scopetype.getCurrentSettings(offset)
+			self.setCurrentSettings()
+
+	def setCurrentSettings(self):
+		(self.XScale,self.XOffset,self.YScale,self.YOffset,self.SampSs) = self.getcurrentSettings()
+		self.findParam('yscale').setValue(self.YScale)
+		self.findParam('xoffset').setValue(self.XOffset)
+		self.findParam('yoffset').setValue(self.YOffset)
+		self.findParam('sampsper').setValue(self.SampSs)
+
 	def queryscope(self,arg):
 		vrm = visa.ResourceManager()
 		self.visaInst = vrm.open_resource(self.findParam('connStr').getValue())
-		self.detectedscopeid = self.visaInst.query("*IDN?").split(",")
+		self.detectedscopeid = self.visaInst.query("*IDN?").strip().split(",")
 		self.findParam('scopeid').setValue(str(self.detectedscopeid))
-		logging.info(str(self.detectedscopeid))
-		logging.info(self.scopes)
 		self.updateScopeDriver()
 
 	def resetscope(self,arg):
@@ -112,29 +161,25 @@ class VisaScopeInterface(ScopeTemplate, Plugin):
 	def updateScopeDriver(self):
 		for s,v in self.scopes.items():
 			if str(self.detectedscopeid[1]) in v.support():
+				logging.info("found scope driver: %s" % v._name)
 				self.scopetype = self.scopes[v._name]
 				self.scopetype.visaInst = self.visaInst
 				self.scopetype.params = self.params
-				self.scopetype.updateChannels()
-				self.scopetype.updateTriggers()
+				#				self.params.append(self.scopetype.params)
 				self.findParam('scopedriver').setValue(v._name)
 				self.scopetype.updateCurrentSettings()
 				self.scopetype.currentSettings()
-				self.scopetype.dataUpdated.connect(self.newDataReceived)
+				self.dataUpdated.connect(self.newDataReceived)
+				self.params.init()
+
 				return
 
 		self.scopetype = None
 		self.findParam('scopedriver').setValue("No Support Detected")
 	
-
-	@setupSetParam("Example Strings")
-	def exampleString(self, newstr):
-		self.findParam('connStr').setValue(newstr)
-
 	@setupSetParam("Scope Type")
 	def setCurrentScope(self, scope, update=True):
 		self.scopetype = scope
-
 
 	def _con(self):
 		self.queryscope("doesnt matter")
@@ -150,11 +195,15 @@ class VisaScopeInterface(ScopeTemplate, Plugin):
 
 	def arm(self):
 		try:
-			self.scopetype.arm()
+			if self.scopetype is not None:
+				self.scopetype.arm()
 		except Exception:
 			self.dis()
 			raise
 
 	def capture(self):
-		"""Raises IOError if unknown failure, returns 'False' if successful, 'True' if timeout"""
-		return self.scopetype.capture()
+		if self.scopetype is not None:
+			(dp,do,ss) = self.scopetype.capture()
+			self.dataUpdated.emit(self._name, dp,do,ss)
+		else:
+			pass #fixme warning

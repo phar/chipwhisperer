@@ -79,7 +79,10 @@ class CWCoreAPI(Parameterized):
         self.settings = Settings()
 
         # Initialize default values
-        self._project = self._stage = self._scope = self._target = self._attack =  self._traceFormat = self._acqPattern = self._glitcher = None
+        self._project = self._stage =  self._traceFormat = self._scope = self._target = self._attack = self._acqPattern = self._glitcher = None
+		
+		##set sqlite as our new default
+		# self._traceFormat = self.valid_traces['SQLite']
 		
         self._attack = self.valid_attacks.get("CPA", None)
 		# self._acqPattern = self.valid_acqPatterns["None"]
@@ -94,7 +97,7 @@ class CWCoreAPI(Parameterized):
 			{'name':'Stage Module', 'key':'stageMod', 'type':'list', 'values':self.valid_stages, 'get':self.getStage, 'set':self.setStage},
 			{'name':'Target Module', 'key':'targetMod', 'type':'list', 'values':self.valid_targets, 'get':self.getTarget, 'set':self.setTarget},
             {'name':'Trace Format', 'type':'list', 'values':self.valid_traces, 'get':self.getTraceFormat, 'set':self.setTraceFormat},
-            {'name':'Auxiliary Module', 'type':'list', 'values':self.valid_aux, 'get':self.getAuxModule, 'set':self.setAux},
+            {'name':'Auxiliary Module', 'type':'list', 'values':self.valid_aux, 'get':self.getAuxModule, 'set':self.setAux, 'visible':self.scopeIsChipwhisperer},
 			{'name':'Key/Text Pattern Generator', 'type':'list', 'values':self.valid_acqPatterns, 'get':self.getAcqPattern, 'set':self.setAcqPattern},
             {'name':'Acquisition Settings', 'type':'group', 'children':[
                     {'name':'Number of Traces', 'type':'int', 'limits':(1, 1E9), 'get':self.getNumTraces, 'set':self.setNumTraces, 'linked':['Traces per Set']},
@@ -128,6 +131,11 @@ class CWCoreAPI(Parameterized):
         # self.params.getChild('Attack Module').getDynamicParameters(self.attackParam)
 
         self.newProject()
+
+    def scopeIsChipwhisperer(self):
+		if self._scope in ["ChipWhisperer/OpenADC"]:
+			return True
+		return False
 
     def getResults(self, name):
         """Return the requested result widget. It should be registered."""
@@ -268,6 +276,11 @@ class CWCoreAPI(Parameterized):
         """Open project file"""
         self.newProject()
         self.project().load(fname)
+        logging.info(dir(self.project()))
+        logging.info(TraceSource.registeredObjects["Trace Management"])
+        logging.info(dir(TraceSource.registeredObjects["Trace Management"]))
+        TraceSource.registeredObjects["Trace Management"].getTrace(0)
+				
         try:
             ResultsBase.registeredObjects["Trace Output Plot"].setTraceSource(TraceSource.registeredObjects["Trace Management"])
         except KeyError:

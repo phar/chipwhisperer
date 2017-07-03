@@ -25,8 +25,9 @@ class VisaScopeInterface_TEK3000(VisaScope):
 		self.YOffset = 0
 		self.XOffset = 0
 		
-		self._channels = {"CHANnel1":"CH1","CHANnel2":"CH2","CHANnel3":"CH3","CHANnel4":"CH4"}
-		self._triggers = ["CHANnel1","CHANnel2","CHANnel3","CHANnel4","EXT","EXT5","ACLine"]
+		self.cchannels = ["Channel 1","Channel 2","Channel 3","Channel 4"]
+		self.triggers = ["Channel 1","Channel 2","Channel 3","Channel 4","EXT","EXT5","ACLine"]
+		
 
 		super(self.__class__, self).__init__()
 

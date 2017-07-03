@@ -90,7 +90,7 @@ class TraceManagerImport(QtFixes.QDialog):
     def traceTypeChanged(self, newindx):
         self.openCfg.setEnabled(False)
         newTT = self.modName.itemData(newindx)        
-        self.tmanagerParams = newTT.getParamsClass(openMode=True)   
+        self.tmanagerParams = newTT.getParamsClass(openMode=True)
         self.tmanager = newTT(self.tmanagerParams)
         self.paramTree.clear()
         self.paramTree.addParameters(self.tmanagerParams.getParams()._PyQtGraphParameter)

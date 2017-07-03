@@ -35,51 +35,74 @@ class ScopeTemplate(Parameterized):
 	_name = "None"
 
 	def __init__(self):
+		self.dataUpdated = util.Signal()
 		self.connectStatus = util.Observable(False)
 		self.getParams().register()
-		self.channels = [Channel(self.getName() + " - Channel " + str(n)) for n in range(1,2)]
+		self.scopechannels = {}
+		self.chanobj = Channel(self._name)
+		self.scopechannels[self._name] = self.chanobj
+		self._trigger = None
+		self._channel = None
+		self._yscale = 1.0
+		self._xscale = 1.0
+		self._xoffset = 0
+		self._yoffset = 0
 
-#ok, for any given scope, or channel, these settings are available for scripting, "Channel" will be required for each scope
 		self.params.addChildren([
 			{'name':'Sample Rate', 'key':'sampsper', 'type':'float', 'siPrefix': True, 'suffix': 'Sa/S', 'get':self.getSampleRate,'set':self.setSampleRate},
 			{'name':'Y-Scale', 'key':'yscale', 'type':'float', 'get':self.getMagnitudeScale,'set':self.setMagnitudeScale},
 			{'name':'Y-Offset', 'key':'yoffset', 'type':'float', 'step':1E-3, 'siPrefix': True, 'suffix': 'V', 'get':self.getMagnitudeOffset,'set':self.setMagnitudeOffset},
 			{'name':'X-Offset', 'key':'xoffset', 'type':'float', 'step':1E-6, 'siPrefix': True, 'suffix': 'S','get':self.getTimeOffset,'set':self.setTimeOffset},
-			{'name':'Channel', 'key':'chan', 'type':'list', 'values':self._channels, 'get':self.getChannel,'set':self.setChannel},
 		])
+	
 
+	def updateScopeDriver(self):
+		self.scopetype = self.scopes[v._name]
+		self.scopetype.visaInst = self.visaInst
+		self.scopetype.params = self.params
+		self.findParam('scopedriver').setValue(v._name)
+		self.scopetype.updateCurrentSettings()
+		self.scopetype.currentSettings()
+		self.scopetype.dataUpdated.connect(self.newDataReceived)
 
 	def setSampleRate(self, scale,blockSignal=False):
-		raise AttributeError("must implement")
+		raise AttributeError("must implement setSampleRate")
+	
 	def getSampleRate(self):
-		raise AttributeError("must implement")
+		raise AttributeError("must implement getSampleRate")
 
 	def setTimeScale(self, scale):
-		raise AttributeError("must implement")
+		raise AttributeError("must implement setTimeScale")
 	
 	def getMagnitudeScale(self):
-		raise AttributeError("must implement")
+		raise AttributeError("must implement getMagnitudeScale")
 
 	def setMagnitudeScale(self, scale,  blockSignal=False):
-		raise AttributeError("must implement")
+		raise AttributeError("must implement setMagnitudeScale")
 	
 	def getMagnitudeOffset(self):
-		raise AttributeError("must implement")
+		raise AttributeError("must implement getMagnitudeOffset")
 
 	def	setMagnitudeOffset(self, offset,  blockSignal=False):
-		raise AttributeError("must implement")
+		raise AttributeError("must implement setMagnitudeOffset")
 	
 	def getTimeOffset(self):
-		raise AttributeError("must implement")
+		raise AttributeError("must implementgetTimeOffset")
 
 	def setTimeOffset(self, offset,  blockSignal=False):
-		raise AttributeError("must implement")
+		raise AttributeError("must implement setTimeOffset")
+
+	def getTrigger(self):
+		raise Warning("must implement getTrigger")
+	
+	def setTrigger(self,trig, blockSignal=None):
+		raise Warning("must implement setTrigger")
 	
 	def getChannel(self):
-		raise AttributeError("must implement")
+		raise Warning("must implement getChannel")
 	
-	def setChannel(self,chan, blockSignal=None):
-		raise AttributeError("must implement")
+	def setChannel(self,trig, blockSignal=None):
+		raise Warning("must implement setChannel")
 	
 	def dcmTimeout(self):
 		pass
@@ -90,14 +113,14 @@ class ScopeTemplate(Parameterized):
 	def setCurrentScope(self, scope):
 		pass
 
-	def newDataReceived(self, channelNum, data=None, offset=0, sampleRate=0):
-		self.channels[channelNum].newScopeData(data, offset, sampleRate)
+	def newDataReceived(self, channel, data=None, offset=0, sampleRate=0):
+		self.scopechannels[channel].newScopeData(data, offset, sampleRate) #fixme
 
 	def getStatus(self):
 		return self.connectStatus.value()
 
 	def con(self):
-		for channel in self.channels:
+		for (cn,channel) in self.scopechannels.items():
 			channel.register()
 		if self._con():
 			self.connectStatus.setValue(True)
@@ -107,7 +130,7 @@ class ScopeTemplate(Parameterized):
 
 	def dis(self):
 		if self._dis():
-			for channel in self.channels:
+			for (cn,channel) in self.scopechannels.items():
 				channel.deregister()
 		self.connectStatus.setValue(False)
 
@@ -132,6 +155,7 @@ class ScopeTemplate(Parameterized):
 		#     time.sleep(0.05)
 		#     util.updateUI()
 		pass
+	
 
 
 class Channel(TraceSource):
@@ -169,3 +193,6 @@ class Channel(TraceSource):
 
 	def getSampleRate(self):
 		return self._sampleRate
+
+	def __str__(self):
+		return self.name
