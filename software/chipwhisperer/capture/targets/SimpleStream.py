@@ -9,7 +9,7 @@ import re
 from itertools import *
 
 class SimpleSerial(TargetTemplate):
-	_name = "Simple Stream"
+	_name = "Simple Stream (depre)"
 
 	def __init__(self):
 		self.timeout = 5
